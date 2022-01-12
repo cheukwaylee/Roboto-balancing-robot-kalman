@@ -59,6 +59,39 @@ float sp=50;
 float si=1.0;
 float sd=3.0;
 
+// entries of the dynamics matrix (A)
+float A33 = 0;
+float A34 = 1;
+float A43 = 0;
+float A44 = 36.9312;
+
+// entries of the inputs matrix (B)
+float B3 = 0;
+float B4 = 0.9402;
+
+// entries of the outputs matrix (C)
+float C33 = 1;
+float C34 = 0;
+float C43 = 0;
+float C44 = 1;
+
+// entries of the Kalman filter matrix (Kf)
+float Kf33 = 0.3399;
+float Kf34 = 1.9922;
+float Kf43 = 1.9922;
+float Kf44 = 11.9699;
+
+// entries of the matrix gave by multiplying the Kalman filter matrix (Kf) and the outputs matrix (C)
+float KfC33 = 0.3399;
+float KfC34 = 1.9922;
+float KfC43 = 1.9922;
+float KfC44 = 11.9699;
+
+// entries of the LQR gain (K)
+float K3 = 79.1914;
+float K4 = 14.0874;
+
+
 GimbalPID ChassiPitchPID;
 float CMbalanceVal=0;
 /*-------------  µ×ÅÌ¿ØÖÆÑ­»·  -------------*/
@@ -77,7 +110,7 @@ void CMControlLoop(void)
 			//CMbalanceVal = caculate_balance(0.15*57.3);
 			//move_balance(RC_Ex_Ctl.rc.ch1/5.12,0.5f*(RC_Ex_Ctl.rc.ch2),CMbalanceVal);
 			move_balance(0,0,CMbalanceVal);
-			//move_balance(0,0,0);
+			kalman_filter_update(input_to_wheels, Pitch, Pitch_gyro);	// update the estimation of the balancing robot state
     }
     else if(remoteState == STANDBY_STATE )
     {
@@ -135,12 +168,13 @@ float out_speedL=0;
 float out_speedR=0;
 int16_t speedL=0;
 int16_t speedR=0;
+float input_to_wheels=0;	// input to the wheels of balancing robot (to be used in Kalman filter)
 float history[10]={0,0,0,0,0,0,0,0,0,0};
 int16_t history_pos=0 ;
 void move_balance(int16_t speedY, int16_t rad,int16_t balance){
-	float max_speed=0;
-	speedL = speedY + balance + rad;
-	speedR = -speedY - balance + rad;
+//	float max_speed=0;
+//	speedL = speedY + balance + rad;
+//	speedR = -speedY - balance + rad;
 //	
 //	if(fabs(speedL)>max_speed)
 //        max_speed=fabs(speedL);
@@ -156,18 +190,22 @@ void move_balance(int16_t speedY, int16_t rad,int16_t balance){
 //	if (abs(Pitch)>0.01){
 //		now_Pitch=Pitch;
 //	}
-	float position = continuous_current_position_201/360.0;
-	float gain = 2.5;
-//	if (abs(0.24-Pitch)<0.1){
-//		gain*=1.2;
-//	}
-	speedL = gain*((0.25-Pitch)*57.3*94.1528+(0-Pitch_gyro)*57.3*15.8812);//+(0-position)*(-2.2361)+(0-estimated_speed_201)*(-5.1990)
+	
+	speedL = 1*((0.25-Pitch_estim)*57.3*K3+(0-Pitch_gyro_estim)*57.3*K4);
 	speedR = -speedL;
-//	
-//	out_speedL = PID_ControllerDriver(&SPCHIASSISA,speedL,current_cm_201);
-//  out_speedR = PID_ControllerDriver(&SPCHIASSISB,speedR,current_cm_202);
-	//CMControlOut(0,0,0,0);
-	CAN1_Send_Bottom(speedL,speedR,0,0);
+
+	CMControlOut(speedL,speedR,0,0);
+	//CAN1_Send_Bottom(speedL,speedR,0,0); //to send the control signals directly to the wheels motors
+}
+
+/*------- estimates the angular position and velocity of the robot by its inputs and outputs -------*/
+void kalman_filter_update(int16_t u, float y3, float y4)
+{
+		// equation for state estimation: x_hat(k+1) = (A - Kf*C)*x_hat(k) + B*u(k) + Kf*y(k)
+		Pitch_estim =
+			(A33 - KfC33)*Pitch_estim + (A34 - KfC34)*Pitch_gyro_estim + B3*u + Kf33*y3 + Kf34*y4;
+		Pitch_gyro_estim =
+			(A43 - KfC43)*Pitch_estim + (A44 - KfC44)*Pitch_gyro_estim + B4*u + Kf43*y3 + Kf44*y4;
 }
 
 /*-------------  µ×ÅÌÍ£Ö¹  -------------*/
@@ -283,12 +321,14 @@ void CMControlOut(int16_t spa , int16_t spb ,int16_t spc ,int16_t spd )
 
     float current_sum=0;
     int max_now_speed=0;
-
+	
     float speedA = PID_ControllerDriver(&SPCHIASSISA,spa,current_cm_201);
     float speedB = PID_ControllerDriver(&SPCHIASSISB,spb,current_cm_202);
     float speedC = PID_ControllerDriver(&SPCHIASSISC,spc,current_cm_203);
     float speedD = PID_ControllerDriver(&SPCHIASSISD,spd,current_cm_204);
 
+		input_to_wheels = speedA;	// recovering the input sent to wheels, so that it can be used in the Kalman filter
+	
    // if(cap_receive.state_module==Cap_Run&&cap_receive.state_cap==Cap_Boost&&cap_receive.CapVol>11800)
     if(1)
     {

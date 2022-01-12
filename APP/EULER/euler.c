@@ -13,6 +13,7 @@
 float Yaw_gyro,Roll_gyro,Pitch_gyro;
 float Yaw_mag,Roll_accel,Pitch_accel;
 float Yaw,Roll,Pitch,Yaw_Offset,Pitch_Offset,Roll_Offset;
+float Pitch_estim, Pitch_gyro_estim; //estimations done by the Kalman filter
 int count = 0;
 float delay_speed=0;
 
@@ -53,6 +54,9 @@ void init_euler(void){
 	Pitch=asin(ax);
 	Yaw=0;
 	Pitch_gyro=0;
+	
+	Pitch_estim = 0.25;					//initial value of the angular position estimated by the Kalman filter
+	Pitch_gyro_estim = 0;				//initial value of the angular velocity estimated by the Kalman filter
 }
 /*
 
