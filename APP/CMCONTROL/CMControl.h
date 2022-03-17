@@ -20,6 +20,7 @@ void CM_Climb_PID(void);
 float caculate_balance(float Setposition);
 void move_balance(int16_t speedY, int16_t rad,int16_t balance);
 void kalman_filter_update(int16_t u, float y3, float y4);
+void computeContiguousEncoderPos();
 
 extern float speed_limite;
 extern u8 quick_spin_flag;
@@ -32,5 +33,13 @@ extern float lec_numC;
 extern float lec_numD;
 extern int16_t speedA_final,speedB_final,speedC_final,speedD_final;
 extern float input_to_wheels;		// input to the wheels of balancing robot (to be used in Kalman filter)
+
+
+/* variables to contiguously track the position of the motors' encoder */
+//extern int roundsCounter;
+//extern unsigned int completeCircleEncoderAngle;
+//extern unsigned int currentEncoderAngle;
+//extern unsigned int prevEncoderAngle;
+//extern long long int contiguousEncoderPos;
 
 #endif

@@ -87,7 +87,7 @@ void Control_Task()
         update_from_dma();
     }
 
-    if(time_tick_1ms%10 == 0)
+    if(time_tick_1ms%1 == 0)
     {
 
         //sendtoComputer(0,0,0);

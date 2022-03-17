@@ -52,6 +52,8 @@ typedef struct _super_cap_receive
 	u8 reserve[3];
 }super_cap_receive;
 
+volatile extern int16_t current_position_201;			//left wheel encoder's position ***
+volatile extern int16_t current_position_202;			//right wheel encoder's position ***
 volatile extern int16_t current_position_206;    	//pitch gimbal
 volatile extern int16_t current_position_205;			//yaw gimbal
 volatile extern int16_t current_position_207;
@@ -68,6 +70,8 @@ volatile extern int16_t continuous_current_position_205;			//yaw gimbal
 volatile extern int16_t continuous_current_position_206;    	//pitch gimbal
 volatile extern float continuous_current_position_207;
 volatile extern float continuous_current_position_201;
+volatile extern float continuous_current_position_202;
+extern int16_t rotate_201_count;
 volatile extern float estimated_speed_201;
 extern super_cap_receive cap_receive;
 volatile extern int16_t t_i_1;

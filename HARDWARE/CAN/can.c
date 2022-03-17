@@ -42,7 +42,8 @@ u8 rotate_205_count=0;
 u8 rotate_206_count=0;
 int16_t rotate_201_count=0;
 int16_t rotate_207_count=0;
-volatile int16_t current_position_201; 
+volatile int16_t current_position_201;
+volatile int16_t current_position_202;
 
 
 volatile int16_t continuous_current_position_205;			//yaw gimbal
@@ -151,12 +152,21 @@ void CAN1_RX0_IRQHandler(void)
         }
 				else if(rx_message.StdId == 0x201)      //×óÇ°          
         { 		
-						current_position_201=(rx_message.Data[0]<<8) | rx_message.Data[1];	
-             current_cm_201 = (rx_message.Data[2]<<8) | rx_message.Data[3];	
-					t_i_1=(rx_message.Data[4]<<8) | rx_message.Data[5];
+						current_position_201=(rx_message.Data[0]<<8) | rx_message.Data[1];		//position of the encoder of the left wheel	
+            current_cm_201 = (rx_message.Data[2]<<8) | rx_message.Data[3];	
+						t_i_1=(rx_message.Data[4]<<8) | rx_message.Data[5];
+						
+//						currentEncoderAngle = current_position_201;
+//						if (prevEncoderAngle - currentEncoderAngle > completeCircleEncoderAngle/2) roundsCounter++;
+//						else if (currentEncoderAngle - prevEncoderAngle > completeCircleEncoderAngle/2) roundsCounter--;
+//						
+//						contiguousEncoderPos = currentEncoderAngle + roundsCounter*completeCircleEncoderAngle;
+//						
+//						prevEncoderAngle = currentEncoderAngle;
         }
 				else if(rx_message.StdId == 0x202)       //ÓÒÇ°         
         { 
+							current_position_202=(rx_message.Data[0]<<8) | rx_message.Data[1];	//position of the encoder of the right wheel
              current_cm_202 = (rx_message.Data[2]<<8) | rx_message.Data[3];	
 					t_i_2=(rx_message.Data[4]<<8) | rx_message.Data[5];
 				
