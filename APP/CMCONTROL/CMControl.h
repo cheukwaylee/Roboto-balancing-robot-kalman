@@ -19,7 +19,9 @@ void CM_Normal_PID(void);
 void CM_Climb_PID(void);
 float caculate_balance(float Setposition);
 void move_balance(int16_t speedY, int16_t rad,int16_t balance);
+void sliding_mode_controller(int16_t speedY, int16_t rad,int16_t balance);
 void kalman_filter_update(int16_t u, float y3, float y4);
+void kalman_filter_nonlinear_update(int16_t u, float y1, float y3);
 void computeContiguousEncoderPos();
 
 extern float speed_limite;

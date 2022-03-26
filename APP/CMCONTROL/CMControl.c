@@ -61,6 +61,19 @@ float sp=50;
 float si=1.0;
 float sd=3.0;
 
+
+/* physical parameters of the balancing robot */
+float M_bottom = 3;       // mass of the lower part of the chassis (kg)
+float m_top = 1;          // mass of the upper part of the chassis (kg)
+float b = 0.1;            // estimate of viscous friction coefficient (N-m-s)
+float h = 0.30;           // length from top of the robot to line passing through the two wheels (m)
+float I = 0.09;				    // moment of inertia of the pendulum (kg*m^2), estimated with I=(1/3)*M*h^2
+float g = 9.82;           // acceleration due to gravity (m/s^2)
+float l = 0.25;           // length between the pendulum center of mass and the line passing through the two wheels (m)
+float r = 0.07;           // wheel radius (m)
+float k_T_F = 28.57;      // coefficient that, given a torque T, computes the linear force to the wheels F = k_T_F*T = (2/r)*T 
+
+
 /* entries of the dynamics matrix (A) */
 //contiguous time 2x2
 //float A33 = 0;
@@ -83,15 +96,32 @@ float sd=3.0;
 //float A43 = 0.3695;
 //float A44 = 1.0018;
 //discrete time 3x3
+//float A22 = 1;
+//float A23 = 0.0011;
+//float A24 = 0;
+//float A32 = 0;
+//float A33 = 1;
+//float A34 = 0.0010;
+//float A42 = 0;	//before was -0.0457, but it was probably an error
+//float A43 = 0.0179;
+//float A44 = 0;
+//discrete time 4x4 (linearization of nonlinear model)
+float A11 = 1;
+float A12 = 0.0010;
+float A13 = 0;
+float A14 = 0;
+float A21 = 0;
 float A22 = 1;
-float A23 = 0.0011;
+float A23 = 0.0015;
 float A24 = 0;
+float A31 = 0;
 float A32 = 0;
 float A33 = 1;
 float A34 = 0.0010;
-float A42 = -0.0457;
-float A43 = 0.0179;
-float A44 = 0;
+float A41 = 0;
+float A42 = 0;
+float A43 = 0.0220;
+float A44 = 1;
 
 /* entries of the inputs matrix (B) */
 //contiguous time 2x1
@@ -105,76 +135,147 @@ float A44 = 0;
 //float B3 = 0;
 //float B4 = 0.0094;
 //discrete time 3x1
-float B2 = 0.0080;
+//float B2 = 0.0080;
+//float B3 = 0;
+//float B4 = 0.0130;
+//discrete time 4x1 (linearization of nonlinear model)
+float B1 = 0;
+float B2 = 0.0249;
 float B3 = 0;
-float B4 = 0.0130;
+float B4 = 0.0100;
 
 /* entries of the outputs matrix (C) */
-float C22 = 1;
-float C23 = 0;
-float C24 = 0;
+//Pitch and Pitch_gyro are measured from the sensors
+//float C22 = 0;
+//float C23 = 0;
+//float C24 = 0;
+//float C32 = 0;
+//float C33 = 1;
+//float C34 = 0;
+//float C42 = 0;
+//float C43 = 0;
+//float C44 = 1;
+//Pos and Pitch are measured from the sensors
+float C11 = 1;
+float C12 = 0;
+float C13 = 0;
+float C14 = 0;
+float C31 = 0;
 float C32 = 0;
 float C33 = 1;
 float C34 = 0;
-float C42 = 0;
-float C43 = 0;
-float C44 = 1;
 
 /* initial entries of the Kalman filter matrix (Kf) */
-float Kf22 = 1;
-float Kf23 = 0;
-float Kf24 = 0;
-float Kf32 = 0;
-float Kf33 = 1;
-float Kf34 = 0;
-float Kf42 = 0;
-float Kf43 = 0;
-float Kf44 = 1;
+//Pitch and Pitch_gyro are measured from the sensors, and Pos_dot is estimated
+//float Kf23;
+//float Kf24;
+//float Kf33;
+//float Kf34;
+//float Kf43;
+//float Kf44;
+//Pos and Pitch are measured from the sensors, and Pos_dot and Pitch_gyro are estimated
+float Kf11;
+float Kf13;
+float Kf21;
+float Kf23;
+float Kf31;
+float Kf33;
+float Kf41;
+float Kf43;
 
 /* initial entries of the error covariance matrix of 'x - x_estim' (P) */
+//Pos_dot, Pitch and Pitch_gyro
+//float P22 = 1;
+//float P23 = 0;
+//float P24 = 0;
+//float P32 = 0;
+//float P33 = 1;
+//float P34 = 0;
+//float P42 = 0;
+//float P43 = 0;
+//float P44 = 1;
+//Pos, Pos_dot, Pitch and Pitch_gyro
+float P11 = 1;
+float P12 = 0;
+float P13 = 0;
+float P14 = 0;
+float P21 = 0;
 float P22 = 1;
 float P23 = 0;
 float P24 = 0;
+float P31 = 0;
 float P32 = 0;
 float P33 = 1;
 float P34 = 0;
+float P41 = 0;
 float P42 = 0;
 float P43 = 0;
 float P44 = 1;
 
 /* entries of the predicted error covariance matrix of 'x - x_estim' (P_pred) */
+//Pos_dot, Pitch and Pitch_gyro
+//float P_pred22;
+//float P_pred23;
+//float P_pred24;
+//float P_pred32;
+//float P_pred33;
+//float P_pred34;
+//float P_pred42;
+//float P_pred43;
+//float P_pred44;
+//Pos, Pos_dot, Pitch and Pitch_gyro
+float P_pred11;
+float P_pred12;
+float P_pred13;
+float P_pred14;
+float P_pred21;
 float P_pred22;
 float P_pred23;
 float P_pred24;
+float P_pred31;
 float P_pred32;
 float P_pred33;
 float P_pred34;
+float P_pred41;
 float P_pred42;
 float P_pred43;
 float P_pred44;
 
 /* entries of the disturbance covariance matrix (Vd) */
+float Vd11 = 0.1;
+float Vd12 = 0;
+float Vd13 = 0;
+float Vd14 = 0;
+float Vd21 = 0;
 float Vd22 = 0.1;
 float Vd23 = 0;
 float Vd24 = 0;
+float Vd31 = 0;
 float Vd32 = 0;
 float Vd33 = 0.1;
 float Vd34 = 0;
+float Vd41 = 0;
 float Vd42 = 0;
 float Vd43 = 0;
 float Vd44 = 0.1;
 
 /* entries of the noise covariance matrix (Vn) */
+float Vn11 = 1;
+float Vn12 = 0;
+float Vn13 = 0;
+float Vn14 = 0;
+float Vn21 = 0;
+float Vn22 = 1;
+float Vn23 = 0;
+float Vn24 = 0;
+float Vn31 = 0;
+float Vn32 = 0;
 float Vn33 = 1;
 float Vn34 = 0;
+float Vn41 = 0;
+float Vn42 = 0;
 float Vn43 = 0;
 float Vn44 = 1;
-
-/* entries of the matrix gave by multiplying the Kalman filter matrix (Kf) and the outputs matrix (C) */
-//float KfC33 = 0.3399;
-//float KfC34 = 1.9922;
-//float KfC43 = 1.9922;
-//float KfC44 = 11.9699;
 
 /* entries of the LQR gain (K) */
 //float K3 = 79.1914;
@@ -186,60 +287,114 @@ float K3 = 2.7285;
 float K4 = 0.7700;
 
 /* entries of 'tmp' matrix (matrix that temporarily stores values waiting to be used for other operations) */
+float tmp11;
+float tmp12;
+float tmp13;
+float tmp14;
+float tmp21;
 float tmp22;
 float tmp23;
 float tmp24;
+float tmp31;
 float tmp32;
 float tmp33;
 float tmp34;
+float tmp41;
 float tmp42;
 float tmp43;
 float tmp44;
 
 /* entries of the matrix A*P*A^(T) (at every iteration of the Kalman Filter it gets computed from scratch) */
+float APA11;
+float APA12;
+float APA13;
+float APA14;
+float APA21;
 float APA22;
 float APA23;
 float APA24;
+float APA31;
 float APA32;
 float APA33;
 float APA34;
+float APA41;
 float APA42;
 float APA43;
 float APA44;
 
 /* entries of the matrix C*P_prec*C^(T) (at every iteration of the Kalman Filter it gets computed from scratch) */
+float CPC11;
+float CPC12;
+float CPC13;
+float CPC14;
+float CPC21;
+float CPC22;
+float CPC23;
+float CPC24;
+float CPC31;
+float CPC32;
 float CPC33;
 float CPC34;
+float CPC41;
+float CPC42;
 float CPC43;
 float CPC44;
 
 /* entries of the innovation covariance matrix (S) */
+//Pitch and Pitch_gyro are measured by the sensors
+//float S33;
+//float S34;
+//float S43;
+//float S44;
+//Pos and Pitch are measured by the sensors
+float S11;
+float S13;
+float S31;
 float S33;
-float S34;
-float S43;
-float S44;
 
 /* entries of the inversed innovation covariance matrix (S^(-1)) */
+//Pitch and Pitch_gyro are measured by the sensors
+//float S_inv33;
+//float S_inv34;
+//float S_inv43;
+//float S_inv44;
+//Pos and Pitch are measured by the sensors
+float S_inv11;
+float S_inv13;
+float S_inv31;
 float S_inv33;
-float S_inv34;
-float S_inv43;
-float S_inv44;
 
 /* entries of the output prediction error array (delta_y) */
+float delta_y1;
+float delta_y2;
 float delta_y3;
 float delta_y4;
 
 /* scalar variables */
-float Pos_dot_pred;					//balancing robot's linear velocity on the ground predicted by the Kalman filter
-float Pitch_pred;						//balancing robot's angular position predicted by the Kalman filter
-float Pitch_gyro_pred;			//balancing robot's angular velocity predicted by the Kalman filter
+float Pos_pred;									//balancing robot's linear position on the ground predicted by the Kalman filter
+float Pos_dot_pred;							//balancing robot's linear velocity on the ground predicted by the Kalman filter
+float Pitch_pred;								//balancing robot's angular position predicted by the Kalman filter
+float Pitch_gyro_pred;					//balancing robot's angular velocity predicted by the Kalman filter
+float Pos_estim = 0;
 float Pos_dot_estim = 0;
+float error_Pos;
+float error_Pos_dot;
 float error_Pitch;
 float error_Pitch_gyro;
-float error_Pos_dot;
-float S_det;								//used to store the determinant of the innovation matrix S
-float input_to_wheels = 0;	//input sent to the wheels of balancing robot (to be used in Kalman Filter)
+float S_det;										//used to store the determinant of the innovation matrix S
+float input_to_wheels = 0;			//input sent to the wheels of balancing robot (to be used in Kalman Filter)
 float control_signal;
+float Tcc = 0.001;							//inverse of the frequency of chassis controller (1000 Hz)
+float cos_theta;								//cosine of the robot's angular position
+float sin_theta;								//sine of the robot's angular position
+float a_smc_Pitch;							//value a(x) used for SMC (Sliding Mode Control)
+float b_smc_Pitch;							//value b(x) used for SMC (Sliding Mode Control)
+float smc_conv_coeff = 0.1;			//convergence coefficient of the discrete-time sliding mode controller: |S(k+1)| <= smc_conv_coeff * |S(k)|
+float ref_Pitch_prec = 0;				//previous reference signal for the robot's angular position
+float ref_Pitch_gyro_prec = 0;	//previous reference signal for the robot's angular velocity
+float ref_Pitch_succ;						//current reference signal for the robot's angular position
+float ref_Pitch_gyro_succ;			//current reference signal for the robot's angular velocity
+float k2 = 3;										//coeffient for the sliding function: S(k) = e_pitch_gyro(k) + k2*e_pitch(k)
 
 
 /* variables to contiguously track the position of the motors' encoder */
@@ -303,7 +458,8 @@ void CMControlLoop(void)
 			
 			/* NOTE: Kalman Filter has to be executed before than the LQR controller (think about the control system's block diagram) */
 			//ERASE THE "-" from input_to_wheels
-			kalman_filter_update(input_to_wheels, Pitch, Pitch_gyro);				// update the estimation of the balancing robot state
+			kalman_filter_update(input_to_wheels, Pitch - 0.28, Pitch_gyro);				// update the estimation of the balancing robot state
+			//kalman_filter_nonlinear_update(input_to_wheels, continuous_current_position_201*1, Pitch - 0.28);	// update the estimation of the balancing robot state
 			move_balance(RC_Ex_Ctl.rc.ch1,RC_Ex_Ctl.rc.ch0,CMbalanceVal);															// LQR controller
     }
     else if(remoteState == STANDBY_STATE )
@@ -462,6 +618,34 @@ void move_balance(int16_t speedY, int16_t rad,int16_t balance){
 //		if (Pitch-0.265 < 0.12) speedL *= 1.2;
 //	}
 //	speedL = MotorCurrentLegalize(speedL,5000);
+	
+	speedR = -speedL;
+
+	CMControlOut(speedL+rad*2,speedR+rad*2,0,0);
+	//CAN1_Send_Bottom(speedL,speedR,0,0); //to send the control signals directly to the wheels motors
+}
+
+
+void sliding_mode_controller(int16_t speedY, int16_t rad,int16_t balance){
+
+//	current_position_202
+	
+	ref_Pitch_succ = 0 + (-speedY/1024.0)*0.1221;					//0.1221 rad = (7 degrees)*pi/180 <- MAX inclination of the robot's angular position
+	ref_Pitch_gyro_succ = 0;
+	
+	a_smc_Pitch = ((m_top*l*g*sin_theta)/(I+m_top*l*l) + ((m_top*l*cos_theta)*(-b*Pos_dot_estim - m_top*l*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta))/((I+m_top*l*l)*(M_bottom+m_top))) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
+	b_smc_Pitch = ((2*m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)*r)) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
+	
+	control_signal = (ref_Pitch_gyro_succ - Pitch_gyro_estim - Tcc*a_smc_Pitch + k2*(ref_Pitch_succ - Pitch_estim - Tcc*Pitch_gyro_estim) - smc_conv_coeff*((ref_Pitch_gyro_prec - Pitch_gyro_estim) + k2*(ref_Pitch_prec - Pitch_estim))) / (Tcc*b_smc_Pitch);
+	
+	ref_Pitch_prec = ref_Pitch_succ;
+	ref_Pitch_gyro_prec = ref_Pitch_gyro_succ;
+	
+	
+	control_signal *= 1;
+	
+	speedL = control_signal;
+	
 	speedR = -speedL;
 
 	CMControlOut(speedL+rad*2,speedR+rad*2,0,0);
@@ -470,211 +654,393 @@ void move_balance(int16_t speedY, int16_t rad,int16_t balance){
 
 
 /***************************************************************************************
-*Name     	: kalman_filter
+*Name     	: kalman_filter_update
 *Function 	: estimates the angular position and velocity of the robot by its inputs and outputs
 *Input    	: u (input to the robot at time k-1), y3 (robot's pitch position at time k), y4 (robot's pitch velocity at time k)
 *Output   	: none (the function just updates the values of Pitch_estim and Pitch_gyro_estim, which are estimations of pitch position and velocity of the robot, respectively)
 *Description: it implements a state-of-the-art algorithm to solve iteratively the Riccatti equation, hence to compute Kf (the Kalman Filter gain matrix) and to estimate the robot's state
 ****************************************************************************************/
-void kalman_filter_update(int16_t u, float y3, float y4)
+//void kalman_filter_update(int16_t u, float y3, float y4)
+//{
+//	
+//	/*Step 1: Prediction*/
+//	// state prediction: x_pred(k) = A*x_estim(k-1) + B*u(k-1)
+////	Pitch_pred = (A33*Pitch_estim + A34*Pitch_gyro_estim) + (B3*u);
+////	Pitch_gyro_pred = (A43*Pitch_estim + A44*Pitch_gyro_estim) + (B4*u);
+//	Pos_dot_pred = (A22*Pos_dot_estim + A23*Pitch_estim + A24*Pitch_gyro_estim) + (B2*u);
+//	Pitch_pred = (A32*Pos_dot_estim + A33*Pitch_estim + A34*Pitch_gyro_estim) + (B3*u);
+//	Pitch_gyro_pred = (A42*Pos_dot_estim + A43*Pitch_estim + A44*Pitch_gyro_estim) + (B4*u);
+//	Pitch_gyro_pred = Pitch_gyro_pred*0.0001;
+//	
+//	//Taylor series of consine and sine of the previously estimated robot's angular position
+////	cos_theta = 1 - (Pitch_estim*Pitch_estim)/2 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/24 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/720;
+////	sin_theta = Pitch_estim - (Pitch_estim*Pitch_estim*Pitch_estim)/6 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/120 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/5040;
+////  cos_theta = cos(Pitch_estim);
+////  sin_theta = sin(Pitch_estim);
+////	Pitch_pred = Pitch_estim + Tcc*Pitch_gyro_estim;
+////	Pos_dot_pred = Pos_dot_estim + Tcc*(-b*(I+m_top*l*l)*Pos_dot_estim + m_top*m_top*l*l*g*cos_theta*sin_theta - m_top*l*(I+m_top*l*l)*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta + (2/r)*u) / ((I+m_top*l*l)*(M_bottom+m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
+////	Pitch_gyro_pred = Pitch_gyro_estim + Tcc*((m_top*l*g*sin_theta)/(I+m_top*l*l) + ((m_top*l*cos_theta)*(-b*Pos_dot_estim - m_top*l*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta))/((I+m_top*l*l)*(M_bottom+m_top)) + ((2*m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)*r))*u) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
+//	
+//	
+//	
+//	// compute the matrix A*P(k-1)*A^(T) and store it in the matrix 'tmp'
+////	tmp33 = A33*P33 + A34*P43;
+////	tmp34 = A33*P34 + A34*P44;
+////	tmp43 = A43*P33 + A44*P43;
+////	tmp44 = A43*P34 + A44*P44;
+//	tmp22 = A22*P22 + A23*P32 + A24*P42;
+//	tmp23 = A22*P23 + A23*P33 + A24*P43;
+//	tmp24 = A22*P24 + A23*P34 + A24*P44;
+//	tmp32 = A32*P22 + A33*P32 + A34*P42;
+//	tmp33 = A32*P23 + A33*P33 + A34*P43;
+//	tmp34 = A32*P24 + A33*P34 + A34*P44;
+//	tmp42 = A42*P22 + A43*P32 + A44*P42;
+//	tmp43 = A42*P23 + A43*P33 + A44*P43;
+//	tmp44 = A42*P24 + A43*P34 + A44*P44;
+//	// now 'tmp' stores the matrix A*P(k-1), so we can compute tmp*A^(T)
+////	APA33 = tmp33*A33 + tmp34*A34;
+////	APA34 = tmp33*A43 + tmp34*A44;
+////	APA43 = tmp43*A33 + tmp44*A34;
+////	APA44 = tmp43*A43 + tmp44*A44;
+//	APA22 = tmp22*A22 + tmp23*A23 + tmp24*A24;
+//	APA23 = tmp22*A32 + tmp23*A33 + tmp24*A34;
+//	APA24 = tmp22*A42 + tmp23*A43 + tmp24*A44;
+//	APA32 = tmp32*A22 + tmp33*A23 + tmp34*A24;
+//	APA33 = tmp32*A32 + tmp33*A33 + tmp34*A34;
+//	APA34 = tmp32*A42 + tmp33*A43 + tmp34*A44;
+//	APA42 = tmp42*A22 + tmp43*A23 + tmp44*A24;
+//	APA43 = tmp42*A32 + tmp43*A33 + tmp44*A34;
+//	APA44 = tmp42*A42 + tmp43*A43 + tmp44*A44;
+//	
+//	// forecast error covariance: P_pred(k) = A*P(k-1)*A^(T) + Vd
+////	P_pred33 = APA33 + Vd33;
+////	P_pred34 = APA34 + Vd34;
+////	P_pred43 = APA43 + Vd43;
+////	P_pred44 = APA44 + Vd44;
+//	P_pred22 = APA22 + Vd22;
+//	P_pred23 = APA23 + Vd23;
+//	P_pred24 = APA24 + Vd24;
+//	P_pred32 = APA32 + Vd32;
+//	P_pred33 = APA33 + Vd33;
+//	P_pred34 = APA34 + Vd34;
+//	P_pred42 = APA42 + Vd42;
+//	P_pred43 = APA43 + Vd43;
+//	P_pred44 = APA44 + Vd44;
+//	
+//	/*Step 2: Update predictions*/
+//	// compute the matrix C*P_pred(k)*C^(T) and store it in the matrix 'tmp'
+////	tmp33 = P_pred33*C33 + P_pred34*C34;
+////	tmp34 = P_pred33*C43 + P_pred34*C44;
+////	tmp43 = P_pred43*C33 + P_pred44*C34;
+////	tmp44 = P_pred43*C43 + P_pred44*C44;
+//	tmp23 = P_pred22*C32 + P_pred23*C33 + P_pred24*C34;
+//	tmp24 = P_pred22*C42 + P_pred23*C43 + P_pred24*C44;
+//	tmp33 = P_pred32*C32 + P_pred33*C33 + P_pred34*C34;
+//	tmp34 = P_pred32*C42 + P_pred33*C43 + P_pred34*C44;
+//	tmp43 = P_pred42*C32 + P_pred43*C33 + P_pred44*C34;
+//	tmp44 = P_pred42*C42 + P_pred43*C43 + P_pred44*C44;
+//	// now 'tmp' stores the matrix P_pred(k)*C^(T), and we can compute C*tmp
+////	CPC33 = C33*tmp33 + C34*tmp43;
+////	CPC34 = C33*tmp34 + C34*tmp44;
+////	CPC43 = C43*tmp33 + C44*tmp43;
+////	CPC44 = C43*tmp34 + C44*tmp44;
+//	CPC33 = C32*tmp23 + C33*tmp33 + C34*tmp43;
+//	CPC34 = C32*tmp24 + C33*tmp34 + C34*tmp44;
+//	CPC43 = C42*tmp23 + C43*tmp33 + C44*tmp43;
+//	CPC44 = C42*tmp24 + C43*tmp34 + C44*tmp44;
+//	
+//	// innovation covariance matrix: S(k) = C*P_pred(k)*C^(T) + Vn
+//	S33 = CPC33 + Vn33;
+//	S34 = CPC34 + Vn34;
+//	S43 = CPC43 + Vn43;
+//	S44 = CPC44 + Vn44;
+//	
+//	// compute the inverse of the 2x2 innovation matrix S(k)^(-1)
+//	S_det = S33*S44 - S34*S43;
+//	S_inv33 = S44/S_det;
+//	S_inv34 = -S34/S_det;
+//	S_inv43 = -S43/S_det;
+//	S_inv44 = S33/S_det;
+//	
+//	// compute Kalman Filter gain matrix: Kf(k) = P_pred(k)*C^(T)*S(k)^(-1)
+////	Kf33 = tmp33*S_inv33 + tmp34*S_inv43;
+////	Kf34 = tmp33*S_inv34 + tmp34*S_inv44;
+////	Kf43 = tmp43*S_inv33 + tmp44*S_inv43;
+////	Kf44 = tmp43*S_inv34 + tmp44*S_inv44;
+//	Kf23 = tmp23*S_inv33 + tmp24*S_inv43;
+//	Kf24 = tmp23*S_inv34 + tmp24*S_inv44;
+//	Kf33 = tmp33*S_inv33 + tmp34*S_inv43;
+//	Kf34 = tmp33*S_inv34 + tmp34*S_inv44;
+//	Kf43 = tmp43*S_inv33 + tmp44*S_inv43;
+//	Kf44 = tmp43*S_inv34 + tmp44*S_inv44;
+//	
+//	// error between prediction's output and actual output: delta_y(k) = y(k) - C*x_pred(k)
+//	delta_y3 = y3 - (C32*Pos_dot_pred + C33*Pitch_pred + C34*Pitch_gyro_pred);
+//	delta_y4 = y4 - (C42*Pos_dot_pred + C43*Pitch_pred + C44*Pitch_gyro_pred);
+//	
+//	// state estimation by means of 'a posteriori' correction of the state prediction: x_estim(k) = x_pred(k) + Kf*delta_y(k)
+////	Pitch_estim = Pitch_pred + (Kf33*delta_y3 + Kf34*delta_y4);
+////	Pitch_estim = Pitch_estim*10;
+////	Pitch_gyro_estim = Pitch_gyro_pred + (Kf43*delta_y3 + Kf44*delta_y4);
+//	Pos_dot_estim = Pos_dot_pred + (Kf23*delta_y3 + Kf24*delta_y4);
+//	Pitch_estim = Pitch_pred + (Kf33*delta_y3 + Kf34*delta_y4);
+//	Pitch_gyro_estim = Pitch_gyro_pred + (Kf43*delta_y3 + Kf44*delta_y4);
+//	
+//	// compute the matrix I - Kf*C and store it in the matrix 'tmp'
+////	tmp33 = 1 - (Kf33*C33 + Kf34*C43);
+////	tmp34 = 0 - (Kf33*C34 + Kf34*C44);
+////	tmp43 = 0 - (Kf43*C33 + Kf44*C43);
+////	tmp44 = 1 - (Kf43*C34 + Kf44*C44);
+//	tmp22 = 1 - (Kf23*C32 + Kf24*C42);
+//	tmp23 = 0 - (Kf23*C33 + Kf24*C43);
+//	tmp24 = 0 - (Kf23*C34 + Kf24*C44);
+//	tmp32 = 0 - (Kf33*C32 + Kf34*C42);
+//	tmp33 = 1 - (Kf33*C33 + Kf34*C43);
+//	tmp34 = 0 - (Kf33*C34 + Kf34*C44);
+//	tmp42 = 0 - (Kf43*C32 + Kf44*C42);
+//	tmp43 = 0 - (Kf43*C33 + Kf44*C43);
+//	tmp44 = 1 - (Kf43*C34 + Kf44*C44);
+//	
+//	// error covariance matrix estimation: P(k) = (I - Kf*C)*P_pred(k)
+////	P33 = tmp33*P_pred33 + tmp34*P_pred43;
+////	P34 = tmp33*P_pred34 + tmp34*P_pred44;
+////	P43 = tmp43*P_pred33 + tmp44*P_pred43;
+////	P44 = tmp43*P_pred34 + tmp44*P_pred44;
+//	P22 = tmp22*P_pred22 + tmp23*P_pred32 + tmp24*P_pred42;
+//	P23 = tmp22*P_pred23 + tmp23*P_pred33 + tmp24*P_pred43;
+//	P24 = tmp22*P_pred24 + tmp23*P_pred34 + tmp24*P_pred44;
+//	P32 = tmp32*P_pred22 + tmp33*P_pred32 + tmp34*P_pred42;
+//	P33 = tmp32*P_pred23 + tmp33*P_pred33 + tmp34*P_pred43;
+//	P34 = tmp32*P_pred24 + tmp33*P_pred34 + tmp34*P_pred44;
+//	P42 = tmp42*P_pred22 + tmp43*P_pred32 + tmp44*P_pred42;
+//	P43 = tmp42*P_pred23 + tmp43*P_pred33 + tmp44*P_pred43;
+//	P44 = tmp42*P_pred24 + tmp43*P_pred34 + tmp44*P_pred44;
+//	
+//	
+//	// collect both pitch position/velocity measurements and estimations, so that we can graph and compare them
+////	if (i < N) {
+////		
+////		Pitch_measurements[i] = y3;
+////		Pitch_gyro_measurements[i] = y4;
+////		Pitch_estimations[i] = Pitch_estim;
+////		Pitch_gyro_estimations[i] = Pitch_gyro_estim;
+////		white_noise_input[i] = u;
+////		
+////		if (i == N-1) {
+////			//save the arrays in separated files
+////			
+////			char *separator = "----------";
+////			u8 *separator_u8 = (u8 *) separator;
+////			
+////			/*
+////			u8 Pitch_measurements_u8[4000];
+////			unsigned int jj = 0;
+////			for(unsigned int j=0; j<1000; j++) {
+////				int32_t tmp = (int32_t) Pitch_measurements[j]*10000000000;	//convert the first 10 fractional digits into integer digits, and then convert the number to int
+////				Pitch_measurements_u8[jj] = tmp >> 24;
+////				jj++;
+////				Pitch_measurements_u8[jj] = tmp >> 16;
+////				jj++;
+////				Pitch_measurements_u8[jj] = tmp >> 8;
+////				jj++;
+////				Pitch_measurements_u8[jj] = tmp;
+////				jj++;
+////			}
+////			*/
+////			
+////			u8 Pitch_measurements_u8[4000];
+////			
+////			for(unsigned int j=0; j<1000; j++) {
+////				unsigned long longdata = 0;
+////				longdata = *(unsigned long*)&Pitch_measurements[j];
+////				Pitch_measurements_u8[4*j] = (longdata & 0xFF000000) >> 24;
+////				Pitch_measurements_u8[4*j+1] = (longdata & 0x00FF0000) >> 16;
+////				Pitch_measurements_u8[4*j+2] = (longdata & 0x0000FF00) >> 8;
+////				Pitch_measurements_u8[4*j+3] = (longdata & 0x000000FF);
+////			}
+////			
+////			for (unsigned int j=0; j<20; j++) {
+////				UART3_Send(Pitch_measurements_u8+j*200, 200);
+////			}
+////			UART3_Send(separator_u8, 10);
+////			
+////		}
+////		
+////		i++;
+////	}
+//}
+
+
+/***************************************************************************************
+*Name     	: kalman_filter_nonlinear_update
+*Function 	: estimates the angular position and velocity of the robot by its inputs and outputs, using a nonlinear model of the balancing robot
+*Input    	: u (input to the robot at time k-1), y3 (robot's pitch position at time k), y4 (robot's pitch velocity at time k)
+*Output   	: none (the function just updates the values of Pitch_estim and Pitch_gyro_estim, which are estimations of pitch position and velocity of the robot, respectively)
+*Description: it implements a state-of-the-art algorithm to solve iteratively the Riccatti equation, hence to compute Kf (the Kalman Filter gain matrix) and to estimate the robot's state
+****************************************************************************************/
+void kalman_filter_nonlinear_update(int16_t u, float y1, float y3)
 {
+	
+	//NOTE: we assume that the states observed are Pos and Pitch
+	
+	//Taylor series of consine and sine of the previously estimated robot's angular position
+	cos_theta = 1 - (Pitch_estim*Pitch_estim)/2 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/24 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/720;
+	sin_theta = Pitch_estim - (Pitch_estim*Pitch_estim*Pitch_estim)/6 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/120 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/5040;
+//  cos_theta = cos(Pitch_estim);
+//  sin_theta = sin(Pitch_estim);
 	
 	/*Step 1: Prediction*/
 	// state prediction: x_pred(k) = A*x_estim(k-1) + B*u(k-1)
-//	Pitch_pred = (A33*Pitch_estim + A34*Pitch_gyro_estim) + (B3*u);
-//	Pitch_gyro_pred = (A43*Pitch_estim + A44*Pitch_gyro_estim) + (B4*u);
-	Pos_dot_pred = (A22*Pos_dot_pred + A23*Pitch_estim + A24*Pitch_gyro_estim) + (B2*u);
-	Pitch_pred = (A32*Pos_dot_pred + A33*Pitch_estim + A34*Pitch_gyro_estim) + (B3*u);
-	Pitch_gyro_pred = (A42*Pos_dot_pred + A43*Pitch_estim + A44*Pitch_gyro_estim) + (B4*u);
-	Pitch_gyro_pred = Pitch_gyro_pred*0.0001;
+	
+	Pos_pred = Pos_estim + Tcc*Pos_dot_estim;
+	Pos_dot_pred = Pos_dot_estim + Tcc*(-b*(I+m_top*l*l)*Pos_dot_estim + m_top*m_top*l*l*g*cos_theta*sin_theta - m_top*l*(I+m_top*l*l)*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta + (2/r)*u) / ((I+m_top*l*l)*(M_bottom+m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
+	Pitch_pred = Pitch_estim + Tcc*Pitch_gyro_estim;
+	Pitch_gyro_pred = Pitch_gyro_estim + Tcc*((m_top*l*g*sin_theta)/(I+m_top*l*l) + ((m_top*l*cos_theta)*(-b*Pos_dot_estim - m_top*l*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta))/((I+m_top*l*l)*(M_bottom+m_top)) + ((2*m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)*r))*u) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
+	//Pitch_gyro_pred = Pitch_gyro_pred*0.0001;
+	
 	
 	// compute the matrix A*P(k-1)*A^(T) and store it in the matrix 'tmp'
-//	tmp33 = A33*P33 + A34*P43;
-//	tmp34 = A33*P34 + A34*P44;
-//	tmp43 = A43*P33 + A44*P43;
-//	tmp44 = A43*P34 + A44*P44;
-	tmp22 = A22*P22 + A23*P32 + A24*P42;
-	tmp23 = A22*P23 + A23*P33 + A24*P43;
-	tmp24 = A22*P24 + A23*P34 + A24*P44;
-	tmp32 = A32*P22 + A33*P32 + A34*P42;
-	tmp33 = A32*P23 + A33*P33 + A34*P43;
-	tmp34 = A32*P24 + A33*P34 + A34*P44;
-	tmp42 = A42*P22 + A43*P32 + A44*P42;
-	tmp43 = A42*P23 + A43*P33 + A44*P43;
-	tmp44 = A42*P24 + A43*P34 + A44*P44;
+	tmp11 = A11*P11 + A12*P21 + A13*P31 + A14*P41;
+	tmp12 = A11*P12 + A12*P22 + A13*P32 + A14*P42;
+	tmp13 = A11*P13 + A12*P23 + A13*P33 + A14*P43;
+	tmp14 = A11*P14 + A12*P24 + A13*P34 + A14*P44;
+	tmp21 = A21*P11 + A22*P21 + A23*P31 + A24*P41;
+	tmp22 = A21*P12 + A22*P22 + A23*P32 + A24*P42;
+	tmp23 = A21*P13 + A22*P23 + A23*P33 + A24*P43;
+	tmp24 = A21*P14 + A22*P24 + A23*P34 + A24*P44;
+	tmp31 = A31*P11 + A32*P21 + A33*P31 + A34*P41;
+	tmp32 = A31*P12 + A32*P22 + A33*P32 + A34*P42;
+	tmp33 = A31*P13 + A32*P23 + A33*P33 + A34*P43;
+	tmp34 = A31*P14 + A32*P24 + A33*P34 + A34*P44;
+	tmp41 = A41*P11 + A42*P21 + A43*P31 + A44*P41;
+	tmp42 = A41*P12 + A42*P22 + A43*P32 + A44*P42;
+	tmp43 = A41*P13 + A42*P23 + A43*P33 + A44*P43;
+	tmp44 = A41*P14 + A42*P24 + A43*P34 + A44*P44;
 	// now 'tmp' stores the matrix A*P(k-1), so we can compute tmp*A^(T)
-//	APA33 = tmp33*A33 + tmp34*A34;
-//	APA34 = tmp33*A43 + tmp34*A44;
-//	APA43 = tmp43*A33 + tmp44*A34;
-//	APA44 = tmp43*A43 + tmp44*A44;
-	APA22 = tmp22*A22 + tmp23*A23 + tmp24*A24;
-	APA23 = tmp22*A32 + tmp23*A33 + tmp24*A34;
-	APA24 = tmp22*A42 + tmp23*A43 + tmp24*A44;
-	APA32 = tmp32*A22 + tmp33*A23 + tmp34*A24;
-	APA33 = tmp32*A32 + tmp33*A33 + tmp34*A34;
-	APA34 = tmp32*A42 + tmp33*A43 + tmp34*A44;
-	APA42 = tmp42*A22 + tmp43*A23 + tmp44*A24;
-	APA43 = tmp42*A32 + tmp43*A33 + tmp44*A34;
-	APA44 = tmp42*A42 + tmp43*A43 + tmp44*A44;
-	
+	APA11 = tmp11*A11 + tmp12*A12 + tmp13*A13 + tmp14*A14;
+	APA12 = tmp11*A21 + tmp12*A22 + tmp13*A23 + tmp14*A24;
+	APA13 = tmp11*A31 + tmp12*A32 + tmp13*A33 + tmp14*A34;
+	APA14 = tmp11*A41 + tmp12*A42 + tmp13*A43 + tmp14*A44;
+	APA21 = tmp21*A11 + tmp22*A12 + tmp23*A13 + tmp24*A14;
+	APA22 = tmp21*A21 + tmp22*A22 + tmp23*A23 + tmp24*A24;
+	APA23 = tmp21*A31 + tmp22*A32 + tmp23*A33 + tmp24*A34;
+	APA24 = tmp21*A41 + tmp22*A42 + tmp23*A43 + tmp24*A44;
+	APA31 = tmp31*A11 + tmp32*A12 + tmp33*A13 + tmp34*A14;
+	APA32 = tmp31*A21 + tmp32*A22 + tmp33*A23 + tmp34*A24;
+	APA33 = tmp31*A31 + tmp32*A32 + tmp33*A33 + tmp34*A34;
+	APA34 = tmp31*A41 + tmp32*A42 + tmp33*A43 + tmp34*A44;
+	APA41 = tmp41*A11 + tmp42*A12 + tmp43*A13 + tmp44*A14;
+	APA42 = tmp41*A21 + tmp42*A22 + tmp43*A23 + tmp44*A24;
+	APA43 = tmp41*A31 + tmp42*A32 + tmp43*A33 + tmp44*A34;
+	APA44 = tmp41*A41 + tmp42*A42 + tmp43*A43 + tmp44*A44;
+
 	// forecast error covariance: P_pred(k) = A*P(k-1)*A^(T) + Vd
-//	P_pred33 = APA33 + Vd33;
-//	P_pred34 = APA34 + Vd34;
-//	P_pred43 = APA43 + Vd43;
-//	P_pred44 = APA44 + Vd44;
+	P_pred11 = APA11 + Vd11;
+	P_pred12 = APA12 + Vd12;
+	P_pred13 = APA13 + Vd13;
+	P_pred14 = APA14 + Vd14;
+	P_pred21 = APA21 + Vd21;
 	P_pred22 = APA22 + Vd22;
 	P_pred23 = APA23 + Vd23;
 	P_pred24 = APA24 + Vd24;
+	P_pred31 = APA31 + Vd31;
 	P_pred32 = APA32 + Vd32;
 	P_pred33 = APA33 + Vd33;
 	P_pred34 = APA34 + Vd34;
+	P_pred41 = APA41 + Vd41;
 	P_pred42 = APA42 + Vd42;
 	P_pred43 = APA43 + Vd43;
 	P_pred44 = APA44 + Vd44;
 	
 	/*Step 2: Update predictions*/
 	// compute the matrix C*P_pred(k)*C^(T) and store it in the matrix 'tmp'
-//	tmp33 = P_pred33*C33 + P_pred34*C34;
-//	tmp34 = P_pred33*C43 + P_pred34*C44;
-//	tmp43 = P_pred43*C33 + P_pred44*C34;
-//	tmp44 = P_pred43*C43 + P_pred44*C44;
-	tmp23 = P_pred22*C32 + P_pred23*C33 + P_pred24*C34;
-	tmp24 = P_pred22*C42 + P_pred23*C43 + P_pred24*C44;
-	tmp33 = P_pred32*C32 + P_pred33*C33 + P_pred34*C34;
-	tmp34 = P_pred32*C42 + P_pred33*C43 + P_pred34*C44;
-	tmp43 = P_pred42*C32 + P_pred43*C33 + P_pred44*C34;
-	tmp44 = P_pred42*C42 + P_pred43*C43 + P_pred44*C44;
+	tmp11 = P_pred11*C11 + P_pred12*C12 + P_pred13*C13 + P_pred14*C14;
+	tmp13 = P_pred11*C31 + P_pred12*C32 + P_pred13*C33 + P_pred14*C34;
+	tmp21 = P_pred21*C11 + P_pred22*C12 + P_pred23*C13 + P_pred24*C14;
+	tmp23 = P_pred21*C31 + P_pred22*C32 + P_pred23*C33 + P_pred24*C34;
+	tmp31 = P_pred31*C11 + P_pred32*C12 + P_pred33*C13 + P_pred34*C14;
+	tmp33 = P_pred31*C31 + P_pred32*C32 + P_pred33*C33 + P_pred34*C34;
+	tmp41 = P_pred41*C11 + P_pred42*C12 + P_pred43*C13 + P_pred44*C14;
+	tmp43 = P_pred41*C31 + P_pred42*C32 + P_pred43*C33 + P_pred44*C34;
 	// now 'tmp' stores the matrix P_pred(k)*C^(T), and we can compute C*tmp
-//	CPC33 = C33*tmp33 + C34*tmp43;
-//	CPC34 = C33*tmp34 + C34*tmp44;
-//	CPC43 = C43*tmp33 + C44*tmp43;
-//	CPC44 = C43*tmp34 + C44*tmp44;
-	CPC33 = C32*tmp23 + C33*tmp33 + C34*tmp43;
-	CPC34 = C32*tmp24 + C33*tmp34 + C34*tmp44;
-	CPC43 = C42*tmp23 + C43*tmp33 + C44*tmp43;
-	CPC44 = C42*tmp24 + C43*tmp34 + C44*tmp44;
+	CPC11 = C11*tmp11 + C12*tmp21 + C13*tmp31 + C14*tmp41;
+	CPC13 = C11*tmp13 + C12*tmp23 + C13*tmp33 + C14*tmp43;
+	CPC31 = C31*tmp11 + C32*tmp21 + C33*tmp31 + C34*tmp41;
+	CPC33 = C31*tmp13 + C32*tmp23 + C33*tmp33 + C34*tmp43;
 	
 	// innovation covariance matrix: S(k) = C*P_pred(k)*C^(T) + Vn
+	S11 = CPC11 + Vn11;
+	S13 = CPC13 + Vn13;
+	S31 = CPC31 + Vn31;
 	S33 = CPC33 + Vn33;
-	S34 = CPC34 + Vn34;
-	S43 = CPC43 + Vn43;
-	S44 = CPC44 + Vn44;
 	
 	// compute the inverse of the 2x2 innovation matrix S(k)^(-1)
-	S_det = S33*S44 - S34*S43;
-	S_inv33 = S44/S_det;
-	S_inv34 = -S34/S_det;
-	S_inv43 = -S43/S_det;
-	S_inv44 = S33/S_det;
+	S_det = S11*S33 - S13*S31;
+	S_inv11 = S33/S_det;
+	S_inv13 = -S13/S_det;
+	S_inv31 = -S31/S_det;
+	S_inv33 = S11/S_det;
 	
 	// compute Kalman Filter gain matrix: Kf(k) = P_pred(k)*C^(T)*S(k)^(-1)
-//	Kf33 = tmp33*S_inv33 + tmp34*S_inv43;
-//	Kf34 = tmp33*S_inv34 + tmp34*S_inv44;
-//	Kf43 = tmp43*S_inv33 + tmp44*S_inv43;
-//	Kf44 = tmp43*S_inv34 + tmp44*S_inv44;
-	Kf23 = tmp23*S_inv33 + tmp24*S_inv43;
-	Kf24 = tmp23*S_inv34 + tmp24*S_inv44;
-	Kf33 = tmp33*S_inv33 + tmp34*S_inv43;
-	Kf34 = tmp33*S_inv34 + tmp34*S_inv44;
-	Kf43 = tmp43*S_inv33 + tmp44*S_inv43;
-	Kf44 = tmp43*S_inv34 + tmp44*S_inv44;
+	Kf11 = tmp11*S_inv11 + tmp13*S_inv31;
+	Kf13 = tmp11*S_inv13 + tmp13*S_inv33;
+	Kf21 = tmp21*S_inv11 + tmp23*S_inv31;
+	Kf23 = tmp21*S_inv13 + tmp23*S_inv33;
+	Kf31 = tmp31*S_inv11 + tmp33*S_inv31;
+	Kf33 = tmp31*S_inv13 + tmp33*S_inv33;
+	Kf41 = tmp41*S_inv11 + tmp43*S_inv31;
+	Kf43 = tmp41*S_inv13 + tmp43*S_inv33;
 	
 	// error between prediction's output and actual output: delta_y(k) = y(k) - C*x_pred(k)
-	y3 = y3 - 0.28;
-	delta_y3 = y3 - (C32*Pos_dot_pred + C33*Pitch_pred + C34*Pitch_gyro_pred);
-	delta_y4 = y4 - (C42*Pos_dot_pred + C43*Pitch_pred + C44*Pitch_gyro_pred);
+	delta_y1 = y1 - (C11*Pos_pred + C12*Pos_dot_pred + C13*Pitch_pred + C14*Pitch_gyro_pred);
+	delta_y3 = y3 - (C31*Pos_pred + C32*Pos_dot_pred + C33*Pitch_pred + C34*Pitch_gyro_pred);
 	
 	// state estimation by means of 'a posteriori' correction of the state prediction: x_estim(k) = x_pred(k) + Kf*delta_y(k)
-//	Pitch_estim = Pitch_pred + (Kf33*delta_y3 + Kf34*delta_y4);
-//	Pitch_estim = Pitch_estim*10;
-//	Pitch_gyro_estim = Pitch_gyro_pred + (Kf43*delta_y3 + Kf44*delta_y4);
-	Pos_dot_estim = Pitch_pred + (Kf23*delta_y3 + Kf24*delta_y4);
-	Pitch_estim = Pitch_pred + (Kf33*delta_y3 + Kf34*delta_y4);
-	Pitch_gyro_estim = Pitch_gyro_pred + (Kf43*delta_y3 + Kf44*delta_y4);
+	Pos_estim = Pos_pred + (Kf11*delta_y1 + Kf13*delta_y3);
+	Pos_dot_estim = Pos_dot_pred + (Kf21*delta_y1 + Kf23*delta_y3);
+	Pitch_estim = Pitch_pred + (Kf31*delta_y1 + Kf33*delta_y3);
+	Pitch_gyro_estim = Pitch_gyro_pred + (Kf41*delta_y1 + Kf43*delta_y3);
 	
 	// compute the matrix I - Kf*C and store it in the matrix 'tmp'
-//	tmp33 = 1 - (Kf33*C33 + Kf34*C43);
-//	tmp34 = 0 - (Kf33*C34 + Kf34*C44);
-//	tmp43 = 0 - (Kf43*C33 + Kf44*C43);
-//	tmp44 = 1 - (Kf43*C34 + Kf44*C44);
-	tmp22 = 1 - (Kf23*C32 + Kf24*C42);
-	tmp23 = 0 - (Kf23*C33 + Kf24*C43);
-	tmp24 = 0 - (Kf23*C34 + Kf24*C44);
-	tmp32 = 0 - (Kf33*C32 + Kf34*C42);
-	tmp33 = 1 - (Kf33*C33 + Kf34*C43);
-	tmp34 = 0 - (Kf33*C34 + Kf34*C44);
-	tmp42 = 0 - (Kf43*C32 + Kf44*C42);
-	tmp43 = 0 - (Kf43*C33 + Kf44*C43);
-	tmp44 = 1 - (Kf43*C34 + Kf44*C44);
+	tmp11 = 1 - (Kf11*C11 + Kf13*C31);
+	tmp12 = 0 - (Kf11*C12 + Kf13*C32);
+	tmp13 = 0 - (Kf11*C13 + Kf13*C33);
+	tmp14 = 0 - (Kf11*C14 + Kf13*C34);
+	tmp21 = 0 - (Kf21*C11 + Kf23*C31);
+	tmp22 = 1 - (Kf21*C12 + Kf23*C32);
+	tmp23 = 0 - (Kf21*C13 + Kf23*C33);
+	tmp24 = 0 - (Kf21*C14 + Kf23*C34);
+	tmp31 = 0 - (Kf31*C11 + Kf33*C31);
+	tmp32 = 0 - (Kf31*C12 + Kf33*C32);
+	tmp33 = 1 - (Kf31*C13 + Kf33*C33);
+	tmp34 = 0 - (Kf31*C14 + Kf33*C34);
+	tmp41 = 0 - (Kf41*C11 + Kf43*C31);
+	tmp42 = 0 - (Kf41*C12 + Kf43*C32);
+	tmp43 = 0 - (Kf41*C13 + Kf43*C33);
+	tmp44 = 1 - (Kf41*C14 + Kf43*C34);
 	
 	// error covariance matrix estimation: P(k) = (I - Kf*C)*P_pred(k)
-//	P33 = tmp33*P_pred33 + tmp34*P_pred43;
-//	P34 = tmp33*P_pred34 + tmp34*P_pred44;
-//	P43 = tmp43*P_pred33 + tmp44*P_pred43;
-//	P44 = tmp43*P_pred34 + tmp44*P_pred44;
-	P22 = tmp22*P_pred22 + tmp23*P_pred32 + tmp24*P_pred42;
-	P23 = tmp22*P_pred23 + tmp23*P_pred33 + tmp24*P_pred43;
-	P24 = tmp22*P_pred24 + tmp23*P_pred34 + tmp24*P_pred44;
-	P32 = tmp32*P_pred22 + tmp33*P_pred32 + tmp34*P_pred42;
-	P33 = tmp32*P_pred23 + tmp33*P_pred33 + tmp34*P_pred43;
-	P34 = tmp32*P_pred24 + tmp33*P_pred34 + tmp34*P_pred44;
-	P42 = tmp42*P_pred22 + tmp43*P_pred32 + tmp44*P_pred42;
-	P43 = tmp42*P_pred23 + tmp43*P_pred33 + tmp44*P_pred43;
-	P44 = tmp42*P_pred24 + tmp43*P_pred34 + tmp44*P_pred44;
+	P11 = tmp11*P_pred11 + tmp12*P_pred21 + tmp13*P_pred31 + tmp14*P_pred41;
+	P12 = tmp11*P_pred12 + tmp12*P_pred22 + tmp13*P_pred32 + tmp14*P_pred42;
+	P13 = tmp11*P_pred13 + tmp12*P_pred23 + tmp13*P_pred33 + tmp14*P_pred43;
+	P14 = tmp11*P_pred14 + tmp12*P_pred24 + tmp13*P_pred34 + tmp14*P_pred44;
+	P21 = tmp21*P_pred11 + tmp22*P_pred21 + tmp23*P_pred31 + tmp24*P_pred41;
+	P22 = tmp21*P_pred12 + tmp22*P_pred22 + tmp23*P_pred32 + tmp24*P_pred42;
+	P23 = tmp21*P_pred13 + tmp22*P_pred23 + tmp23*P_pred33 + tmp24*P_pred43;
+	P24 = tmp21*P_pred14 + tmp22*P_pred24 + tmp23*P_pred34 + tmp24*P_pred44;
+	P31 = tmp31*P_pred11 + tmp32*P_pred21 + tmp33*P_pred31 + tmp34*P_pred41;
+	P32 = tmp31*P_pred12 + tmp32*P_pred22 + tmp33*P_pred32 + tmp34*P_pred42;
+	P33 = tmp31*P_pred13 + tmp32*P_pred23 + tmp33*P_pred33 + tmp34*P_pred43;
+	P34 = tmp31*P_pred14 + tmp32*P_pred24 + tmp33*P_pred34 + tmp34*P_pred44;
+	P41 = tmp41*P_pred11 + tmp42*P_pred21 + tmp43*P_pred31 + tmp44*P_pred41;
+	P42 = tmp41*P_pred12 + tmp42*P_pred22 + tmp43*P_pred32 + tmp44*P_pred42;
+	P43 = tmp41*P_pred13 + tmp42*P_pred23 + tmp43*P_pred33 + tmp44*P_pred43;
+	P44 = tmp41*P_pred14 + tmp42*P_pred24 + tmp43*P_pred34 + tmp44*P_pred44;
 	
-	
-	// collect both pitch position/velocity measurements and estimations, so that we can graph and compare them
-//	if (i < N) {
-//		
-//		Pitch_measurements[i] = y3;
-//		Pitch_gyro_measurements[i] = y4;
-//		Pitch_estimations[i] = Pitch_estim;
-//		Pitch_gyro_estimations[i] = Pitch_gyro_estim;
-//		white_noise_input[i] = u;
-//		
-//		if (i == N-1) {
-//			//save the arrays in separated files
-//			
-//			char *separator = "----------";
-//			u8 *separator_u8 = (u8 *) separator;
-//			
-//			/*
-//			u8 Pitch_measurements_u8[4000];
-//			unsigned int jj = 0;
-//			for(unsigned int j=0; j<1000; j++) {
-//				int32_t tmp = (int32_t) Pitch_measurements[j]*10000000000;	//convert the first 10 fractional digits into integer digits, and then convert the number to int
-//				Pitch_measurements_u8[jj] = tmp >> 24;
-//				jj++;
-//				Pitch_measurements_u8[jj] = tmp >> 16;
-//				jj++;
-//				Pitch_measurements_u8[jj] = tmp >> 8;
-//				jj++;
-//				Pitch_measurements_u8[jj] = tmp;
-//				jj++;
-//			}
-//			*/
-//			
-//			u8 Pitch_measurements_u8[4000];
-//			
-//			for(unsigned int j=0; j<1000; j++) {
-//				unsigned long longdata = 0;
-//				longdata = *(unsigned long*)&Pitch_measurements[j];
-//				Pitch_measurements_u8[4*j] = (longdata & 0xFF000000) >> 24;
-//				Pitch_measurements_u8[4*j+1] = (longdata & 0x00FF0000) >> 16;
-//				Pitch_measurements_u8[4*j+2] = (longdata & 0x0000FF00) >> 8;
-//				Pitch_measurements_u8[4*j+3] = (longdata & 0x000000FF);
-//			}
-//			
-//			for (unsigned int j=0; j<20; j++) {
-//				UART3_Send(Pitch_measurements_u8+j*200, 200);
-//			}
-//			UART3_Send(separator_u8, 10);
-//			
-//		}
-//		
-//		i++;
-//	}
-}
+}	
+
+
+
 
 
 

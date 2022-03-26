@@ -2,7 +2,6 @@
 #define __MIAN_H_
 
 
-
 #include "sp_type.h"
 #include "RefereeInfo.h"
 #include "sp_math.h"
