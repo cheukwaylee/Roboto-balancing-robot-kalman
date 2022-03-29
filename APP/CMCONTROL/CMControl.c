@@ -63,15 +63,15 @@ float sd=3.0;
 
 
 /* physical parameters of the balancing robot */
-float M_bottom = 3;       // mass of the lower part of the chassis (kg)
-float m_top = 1;          // mass of the upper part of the chassis (kg)
+float M_bottom = 4;       // mass of the lower part of the chassis (kg)
+float m_top = 2;          // mass of the upper part of the chassis (kg)
 float b = 0.1;            // estimate of viscous friction coefficient (N-m-s)
-float h = 0.30;           // length from top of the robot to line passing through the two wheels (m)
-float I = 0.09;				    // moment of inertia of the pendulum (kg*m^2), estimated with I=(1/3)*M*h^2
+float h = 0.25;           // length from top of the robot to line passing through the two wheels (m)
+float I = 0.125;				  // moment of inertia of the pendulum (kg*m^2), estimated with I=(1/3)*(M+m)*h^2 or I=(1/3)*M*h^2
 float g = 9.82;           // acceleration due to gravity (m/s^2)
-float l = 0.25;           // length between the pendulum center of mass and the line passing through the two wheels (m)
-float r = 0.07;           // wheel radius (m)
-float k_T_F = 28.57;      // coefficient that, given a torque T, computes the linear force to the wheels F = k_T_F*T = (2/r)*T 
+float l = 0.20;           // length between the pendulum center of mass and the line passing through the two wheels (m)
+float r = 0.075;          // wheel radius (m)
+float k_T_F = 26.667;     // coefficient that, given a torque T, computes the linear force to the wheels F = k_T_F*T = (2/r)*T 
 
 
 /* entries of the dynamics matrix (A) */
@@ -382,19 +382,42 @@ float error_Pos_dot;
 float error_Pitch;
 float error_Pitch_gyro;
 float S_det;										//used to store the determinant of the innovation matrix S
-float input_to_wheels = 0;			//input sent to the wheels of balancing robot (to be used in Kalman Filter)
+float input_to_wheel_L = 0;			//input sent to the wheels of balancing robot (to be used in Kalman Filter)
+float input_to_wheel_R = 0;
 float control_signal;
+float control_signal_L;
+float control_signal_R;
+float control_signal_Pitch;
+float control_signal_Pos_dot_L;
+float control_signal_Pos_dot_R;
 float Tcc = 0.001;							//inverse of the frequency of chassis controller (1000 Hz)
 float cos_theta;								//cosine of the robot's angular position
 float sin_theta;								//sine of the robot's angular position
 float a_smc_Pitch;							//value a(x) used for SMC (Sliding Mode Control)
 float b_smc_Pitch;							//value b(x) used for SMC (Sliding Mode Control)
+float a_smc_Pos;
+float b_smc_Pos;
 float smc_conv_coeff = 0.1;			//convergence coefficient of the discrete-time sliding mode controller: |S(k+1)| <= smc_conv_coeff * |S(k)|
 float ref_Pitch_prec = 0;				//previous reference signal for the robot's angular position
 float ref_Pitch_gyro_prec = 0;	//previous reference signal for the robot's angular velocity
 float ref_Pitch_succ;						//current reference signal for the robot's angular position
 float ref_Pitch_gyro_succ;			//current reference signal for the robot's angular velocity
-float k2 = 3;										//coeffient for the sliding function: S(k) = e_pitch_gyro(k) + k2*e_pitch(k)
+float ref_Pos_dot_L_prec;
+float ref_Pos_dot_R_prec;
+float ref_Pos_dot_L_succ;
+float ref_Pos_dot_R_succ;
+float k2 = 4;										//coeffient for the sliding function: S(k) = e_pitch_gyro(k) + k2*e_pitch(k)
+float speedA_value;
+float speedB_value;
+float kalman_filter_results[4];
+float Pitch_estim_L;
+float Pitch_estim_R;
+float Pitch_gyro_estim_L;
+float Pitch_gyro_estim_R;
+float Pos_estim_L;
+float Pos_estim_R;
+float Pos_dot_estim_L;
+float Pos_dot_estim_R;
 
 
 /* variables to contiguously track the position of the motors' encoder */
@@ -457,10 +480,21 @@ void CMControlLoop(void)
 			//move_balance(RC_Ex_Ctl.rc.ch1/5.12,0.5f*(RC_Ex_Ctl.rc.ch2),CMbalanceVal);
 			
 			/* NOTE: Kalman Filter has to be executed before than the LQR controller (think about the control system's block diagram) */
-			//ERASE THE "-" from input_to_wheels
-			kalman_filter_update(input_to_wheels, Pitch - 0.28, Pitch_gyro);				// update the estimation of the balancing robot state
-			//kalman_filter_nonlinear_update(input_to_wheels, continuous_current_position_201*1, Pitch - 0.28);	// update the estimation of the balancing robot state
-			move_balance(RC_Ex_Ctl.rc.ch1,RC_Ex_Ctl.rc.ch0,CMbalanceVal);															// LQR controller
+			//kalman_filter_update(input_to_wheels, Pitch - 0.28, Pitch_gyro);				// update the estimation of the balancing robot state
+			kalman_filter_nonlinear_update(input_to_wheel_L, continuous_current_position_201*1, Pitch - 0.31);	// update the estimation of the balancing robot state
+			Pos_estim_L = kalman_filter_results[0];
+			Pos_dot_estim_L = kalman_filter_results[1];
+			Pitch_estim_L = kalman_filter_results[2];
+			Pitch_gyro_estim_L = kalman_filter_results[3];
+			kalman_filter_nonlinear_update(input_to_wheel_R, continuous_current_position_202*1, Pitch - 0.31);
+			Pos_estim_R = kalman_filter_results[0];
+			Pos_dot_estim_R = kalman_filter_results[1];
+			Pitch_estim_R = kalman_filter_results[2];
+			Pitch_gyro_estim_R = kalman_filter_results[3];
+			Pitch_estim = (Pitch_estim_L + Pitch_estim_R) / 2;
+			Pitch_gyro_estim = (Pitch_gyro_estim_L + Pitch_gyro_estim_R) / 2;
+			//move_balance(RC_Ex_Ctl.rc.ch1,RC_Ex_Ctl.rc.ch0,CMbalanceVal);															// LQR controller
+			sliding_mode_controller(RC_Ex_Ctl.rc.ch1,RC_Ex_Ctl.rc.ch0,CMbalanceVal);
     }
     else if(remoteState == STANDBY_STATE )
     {
@@ -630,23 +664,59 @@ void sliding_mode_controller(int16_t speedY, int16_t rad,int16_t balance){
 
 //	current_position_202
 	
-	ref_Pitch_succ = 0 + (-speedY/1024.0)*0.1221;					//0.1221 rad = (7 degrees)*pi/180 <- MAX inclination of the robot's angular position
+	cos_theta = cos(Pitch_estim);
+	sin_theta = sin(Pitch_estim);
+	
+	ref_Pitch_succ = 0 + (-speedY/1024.0)*(10*3.1415/180);					//0.1221 rad = (7 degrees)*pi/180 <- MAX inclination of the robot's angular position
 	ref_Pitch_gyro_succ = 0;
 	
 	a_smc_Pitch = ((m_top*l*g*sin_theta)/(I+m_top*l*l) + ((m_top*l*cos_theta)*(-b*Pos_dot_estim - m_top*l*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta))/((I+m_top*l*l)*(M_bottom+m_top))) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
 	b_smc_Pitch = ((2*m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)*r)) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
 	
-	control_signal = (ref_Pitch_gyro_succ - Pitch_gyro_estim - Tcc*a_smc_Pitch + k2*(ref_Pitch_succ - Pitch_estim - Tcc*Pitch_gyro_estim) - smc_conv_coeff*((ref_Pitch_gyro_prec - Pitch_gyro_estim) + k2*(ref_Pitch_prec - Pitch_estim))) / (Tcc*b_smc_Pitch);
+	control_signal_Pitch = (ref_Pitch_gyro_succ - Pitch_gyro_estim - Tcc*a_smc_Pitch + k2*(ref_Pitch_succ - Pitch_estim - Tcc*Pitch_gyro_estim) - smc_conv_coeff*((ref_Pitch_gyro_prec - Pitch_gyro_estim) + k2*(ref_Pitch_prec - Pitch_estim))) / (Tcc*b_smc_Pitch);
 	
 	ref_Pitch_prec = ref_Pitch_succ;
 	ref_Pitch_gyro_prec = ref_Pitch_gyro_succ;
 	
 	
-	control_signal *= 1;
 	
-	speedL = control_signal;
+	//SMC for Pos_dot
+	Pos_dot_estim_L = estimated_speed_201;
+	Pos_dot_estim_R = estimated_speed_202;
 	
-	speedR = -speedL;
+	ref_Pos_dot_L_succ = - Pos_dot_estim_L*0.3;
+	ref_Pos_dot_R_succ = - Pos_dot_estim_R*0.3;
+	
+	a_smc_Pos = (-b*(I + m_top*l*l)*Pos_dot_estim + m_top*m_top*l*l*g*cos_theta*sin_theta - m_top*l*(I + m_top*l*l)*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta) / ((I - m_top*l*l)*(M_bottom + m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
+	b_smc_Pos = (2/r) / ((I - m_top*l*l)*(M_bottom + m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
+	
+	control_signal_Pos_dot_L = (ref_Pos_dot_L_succ - Pos_dot_estim_L - Tcc*a_smc_Pos - smc_conv_coeff*(ref_Pos_dot_L_prec - Pos_dot_estim_L)) / (Tcc*b_smc_Pos);
+	control_signal_Pos_dot_R = (ref_Pos_dot_R_succ - Pos_dot_estim_R - Tcc*a_smc_Pos - smc_conv_coeff*(ref_Pos_dot_R_prec - Pos_dot_estim_R)) / (Tcc*b_smc_Pos);
+	
+	ref_Pos_dot_L_prec = ref_Pos_dot_L_succ;
+	ref_Pos_dot_R_prec = ref_Pos_dot_R_succ;
+	
+	
+	
+	if ((speedY < 0 && Pos_dot_estim > 0) || (speedY > 0 && Pos_dot_estim < 0)) {
+		control_signal_Pos_dot_L *= 100;
+		control_signal_Pos_dot_R *= 100;
+	}
+	
+	//control_signal_balance = 0;
+	control_signal_L = control_signal_Pitch + 0.1*control_signal_Pos_dot_L;	//0.01
+	control_signal_R = control_signal_Pitch + 0.1*control_signal_Pos_dot_R;	//0.01
+	
+	control_signal_L *= 25;		//35
+	control_signal_R *= 25;		//35
+	
+	if (speedY == 0 && rad == 0) {
+		control_signal_L *= 1.3;	//1.3
+		control_signal_R *= 1.3;	//1.3
+	}
+	
+	speedL = control_signal_L;
+	speedR = -control_signal_R;
 
 	CMControlOut(speedL+rad*2,speedR+rad*2,0,0);
 	//CAN1_Send_Bottom(speedL,speedR,0,0); //to send the control signals directly to the wheels motors
@@ -884,19 +954,19 @@ void kalman_filter_nonlinear_update(int16_t u, float y1, float y3)
 	//NOTE: we assume that the states observed are Pos and Pitch
 	
 	//Taylor series of consine and sine of the previously estimated robot's angular position
-	cos_theta = 1 - (Pitch_estim*Pitch_estim)/2 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/24 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/720;
-	sin_theta = Pitch_estim - (Pitch_estim*Pitch_estim*Pitch_estim)/6 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/120 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/5040;
-//  cos_theta = cos(Pitch_estim);
-//  sin_theta = sin(Pitch_estim);
+//	cos_theta = 1 - (Pitch_estim*Pitch_estim)/2 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/24 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/720;
+//	sin_theta = Pitch_estim - (Pitch_estim*Pitch_estim*Pitch_estim)/6 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/120 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/5040;
+  cos_theta = cos(Pitch_estim);
+  sin_theta = sin(Pitch_estim);
 	
 	/*Step 1: Prediction*/
 	// state prediction: x_pred(k) = A*x_estim(k-1) + B*u(k-1)
 	
 	Pos_pred = Pos_estim + Tcc*Pos_dot_estim;
-	Pos_dot_pred = Pos_dot_estim + Tcc*(-b*(I+m_top*l*l)*Pos_dot_estim + m_top*m_top*l*l*g*cos_theta*sin_theta - m_top*l*(I+m_top*l*l)*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta + (2/r)*u) / ((I+m_top*l*l)*(M_bottom+m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
+	Pos_dot_pred = Pos_dot_estim - Tcc*(-b*(I+m_top*l*l)*Pos_dot_estim + m_top*m_top*l*l*g*cos_theta*sin_theta - m_top*l*(I+m_top*l*l)*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta + (2/r)*u) / ((I+m_top*l*l)*(M_bottom+m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
 	Pitch_pred = Pitch_estim + Tcc*Pitch_gyro_estim;
 	Pitch_gyro_pred = Pitch_gyro_estim + Tcc*((m_top*l*g*sin_theta)/(I+m_top*l*l) + ((m_top*l*cos_theta)*(-b*Pos_dot_estim - m_top*l*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta))/((I+m_top*l*l)*(M_bottom+m_top)) + ((2*m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)*r))*u) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
-	//Pitch_gyro_pred = Pitch_gyro_pred*0.0001;
+	Pitch_gyro_pred = Pitch_gyro_pred*0.0001;
 	
 	
 	// compute the matrix A*P(k-1)*A^(T) and store it in the matrix 'tmp'
@@ -1037,6 +1107,10 @@ void kalman_filter_nonlinear_update(int16_t u, float y1, float y3)
 	P43 = tmp41*P_pred13 + tmp42*P_pred23 + tmp43*P_pred33 + tmp44*P_pred43;
 	P44 = tmp41*P_pred14 + tmp42*P_pred24 + tmp43*P_pred34 + tmp44*P_pred44;
 	
+	kalman_filter_results[0] = Pos_estim;
+	kalman_filter_results[1] = Pos_dot_estim;
+	kalman_filter_results[2] = Pitch_estim;
+	kalman_filter_results[3] = Pitch_gyro_estim;
 }	
 
 
@@ -1181,7 +1255,10 @@ void CMControlOut(int16_t spa , int16_t spb ,int16_t spc ,int16_t spd )
 		* The input sent to the motor's speed controller is in the range [-16384, +16384], which corresponds to
 		* a current range of [-20A, +20A]. The motor then produces a torque that is proportional to the
 		* received current and based on its Torque Constant Km = 0.741 N*m/A */
-		input_to_wheels = (speedA*20/16384)*0.741;		//measurement unit: torque [N*m]
+	speedA_value = speedA;	
+	speedB_value = speedB;	
+	input_to_wheel_L = (speedA*20/16384)*0.741;		//measurement unit: torque [N*m]
+	input_to_wheel_R = (speedB*20/16384)*0.741;		//measurement unit: torque [N*m]
 	
    // if(cap_receive.state_module==Cap_Run&&cap_receive.state_cap==Cap_Boost&&cap_receive.CapVol>11800)
     if(1)

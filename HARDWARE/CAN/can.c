@@ -41,6 +41,7 @@ volatile int16_t current_cm_206;
 u8 rotate_205_count=0;
 u8 rotate_206_count=0;
 int16_t rotate_201_count=0;
+int16_t rotate_202_count=0;
 int16_t rotate_207_count=0;
 volatile int16_t current_position_201;
 volatile int16_t current_position_202;
@@ -55,8 +56,13 @@ volatile int16_t previous_position_205;			//yaw gimbal
 volatile int16_t previous_position_206;    	//pitch gimbal
 volatile int16_t previous_position_207; 
 volatile float continuous_current_position_201;
+volatile float continuous_previous_position_201;
+volatile float continuous_current_position_202;
+volatile float continuous_previous_position_202;
 volatile float estimated_speed_201;
-volatile int16_t previous_position_201;	
+volatile float estimated_speed_202;
+volatile int16_t previous_position_201;
+volatile int16_t previous_position_202;
 volatile int16_t t_i_1=0;
 volatile int16_t t_i_2=0;
 volatile int16_t t_i_3=0;
@@ -367,7 +373,7 @@ void continue_value(void)
 	previous_position_206=current_position_206;
 	
 	if(!flag_Ready)
-	{continuous_current_position_201=current_position_201*0.0010784;}
+	{continuous_current_position_201=current_position_201*0.000002995556;}
 	else
 	{
 		if(abs(previous_position_201-current_position_201)>6000)
@@ -379,12 +385,43 @@ void continue_value(void)
 			else
 				rotate_201_count+=1;
 		}
-		estimated_speed_201 =(current_position_201-previous_position_201)*1.0784;
+		//estimated_speed_201 =(continuous_current_position_201-continuous_previous_position_201)/0.001;
+		//before it was: estimated_speed_201 =(current_position_201-previous_position_201)*0.002995556;
 		
-		continuous_current_position_201=current_position_201*0.0010784+rotate_201_count*(8192*0.0010784);
+		continuous_current_position_201=current_position_201*0.000002995556+rotate_201_count*(8192*0.000002995556);
 		//continuous_current_position_filtered_206=LPF_FirstOrder_filter(&filter_206,continuous_current_position_206);
 	}
 	previous_position_201=current_position_201;
+	//continuous_previous_position_201=continuous_current_position_201;
+	if (time_tick_1ms%10 == 0) {
+		estimated_speed_201 = (continuous_current_position_201-continuous_previous_position_201)/0.01;
+		continuous_previous_position_201=continuous_current_position_201;
+	}
+	
+	/**********************************************/
+	
+	if(!flag_Ready)
+	{continuous_current_position_202=-current_position_202*0.000002995556;}
+	else
+	{
+		if(abs(previous_position_202-current_position_202)>6000)
+		{
+			if(previous_position_202<1000)
+			{
+				rotate_202_count-=1;
+			}
+			else
+				rotate_202_count+=1;
+		}
+		
+		continuous_current_position_202=-current_position_202*0.000002995556-rotate_202_count*(8192*0.000002995556);
+		//continuous_current_position_filtered_206=LPF_FirstOrder_filter(&filter_206,continuous_current_position_206);
+	}
+	previous_position_202=current_position_202;
+	if (time_tick_1ms%10 == 0) {
+		estimated_speed_202 = (continuous_current_position_202-continuous_previous_position_202)/0.01;
+		continuous_previous_position_202=continuous_current_position_202;
+	}
 	
 	/**********************************************/
 	if(previous_position_207 == (uint16_t)-1)

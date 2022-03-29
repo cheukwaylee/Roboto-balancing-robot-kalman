@@ -70,9 +70,14 @@ volatile extern int16_t continuous_current_position_205;			//yaw gimbal
 volatile extern int16_t continuous_current_position_206;    	//pitch gimbal
 volatile extern float continuous_current_position_207;
 volatile extern float continuous_current_position_201;
+volatile extern float continuous_previous_position_201;
 volatile extern float continuous_current_position_202;
+volatile extern float continuous_previous_position_202;
 extern int16_t rotate_201_count;
+extern int16_t rotate_202_count;
 volatile extern float estimated_speed_201;
+volatile extern float estimated_speed_202;
+volatile extern int16_t previous_position_202;
 extern super_cap_receive cap_receive;
 volatile extern int16_t t_i_1;
 volatile extern int16_t t_i_2;
