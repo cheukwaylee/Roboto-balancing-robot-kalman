@@ -388,14 +388,14 @@ void continue_value(void)
 		//estimated_speed_201 =(continuous_current_position_201-continuous_previous_position_201)/0.001;
 		//before it was: estimated_speed_201 =(current_position_201-previous_position_201)*0.002995556;
 		
-		continuous_current_position_201=current_position_201*0.000002995556+rotate_201_count*(8192*0.000002995556);
+		continuous_current_position_201 = current_position_201*0.000002995556 + rotate_201_count*(8192*0.000002995556);
 		//continuous_current_position_filtered_206=LPF_FirstOrder_filter(&filter_206,continuous_current_position_206);
 	}
-	previous_position_201=current_position_201;
+	previous_position_201 = current_position_201;
 	//continuous_previous_position_201=continuous_current_position_201;
 	if (time_tick_1ms%10 == 0) {
-		estimated_speed_201 = (continuous_current_position_201-continuous_previous_position_201)/0.01;
-		continuous_previous_position_201=continuous_current_position_201;
+		estimated_speed_201 = (continuous_current_position_201 - continuous_previous_position_201)*100;		//estimated_speed_201 = (...)/0.01;
+		continuous_previous_position_201 = continuous_current_position_201;
 	}
 	
 	/**********************************************/
@@ -414,13 +414,13 @@ void continue_value(void)
 				rotate_202_count+=1;
 		}
 		
-		continuous_current_position_202=-current_position_202*0.000002995556-rotate_202_count*(8192*0.000002995556);
+		continuous_current_position_202 = - (current_position_202*0.000002995556 + rotate_202_count*(8192*0.000002995556));
 		//continuous_current_position_filtered_206=LPF_FirstOrder_filter(&filter_206,continuous_current_position_206);
 	}
-	previous_position_202=current_position_202;
+	previous_position_202 = current_position_202;
 	if (time_tick_1ms%10 == 0) {
-		estimated_speed_202 = (continuous_current_position_202-continuous_previous_position_202)/0.01;
-		continuous_previous_position_202=continuous_current_position_202;
+		estimated_speed_202 = (continuous_current_position_202 - continuous_previous_position_202)*100;		//estimated_speed_202 = (...)/0.01;
+		continuous_previous_position_202 = continuous_current_position_202;
 	}
 	
 	/**********************************************/

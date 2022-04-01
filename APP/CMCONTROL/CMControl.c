@@ -398,12 +398,14 @@ float b_smc_Pitch;							//value b(x) used for SMC (Sliding Mode Control)
 float a_smc_Pos;
 float b_smc_Pos;
 float smc_conv_coeff = 0.1;			//convergence coefficient of the discrete-time sliding mode controller: |S(k+1)| <= smc_conv_coeff * |S(k)|
-float ref_Pitch_prec = 0;				//previous reference signal for the robot's angular position
-float ref_Pitch_gyro_prec = 0;	//previous reference signal for the robot's angular velocity
+float ref_Pitch_prev = 0;				//previous reference signal for the robot's angular position
+float ref_Pitch_gyro_prev = 0;	//previous reference signal for the robot's angular velocity
 float ref_Pitch_succ;						//current reference signal for the robot's angular position
+float ref_Pitch_L_succ;
+float ref_Pitch_R_succ;
 float ref_Pitch_gyro_succ;			//current reference signal for the robot's angular velocity
-float ref_Pos_dot_L_prec;
-float ref_Pos_dot_R_prec;
+float ref_Pos_dot_L_prev;
+float ref_Pos_dot_R_prev;
 float ref_Pos_dot_L_succ;
 float ref_Pos_dot_R_succ;
 float k2 = 4;										//coeffient for the sliding function: S(k) = e_pitch_gyro(k) + k2*e_pitch(k)
@@ -418,6 +420,11 @@ float Pos_estim_L;
 float Pos_estim_R;
 float Pos_dot_estim_L;
 float Pos_dot_estim_R;
+float gain_1 = 600;
+float gain_2 = 60;
+float gain_3 = 6;
+float gain_4 = 1;
+float max_Pos_dot_by_speedY = 2;			//MAX m/s generable by the speedY command
 
 
 /* variables to contiguously track the position of the motors' encoder */
@@ -481,12 +488,12 @@ void CMControlLoop(void)
 			
 			/* NOTE: Kalman Filter has to be executed before than the LQR controller (think about the control system's block diagram) */
 			//kalman_filter_update(input_to_wheels, Pitch - 0.28, Pitch_gyro);				// update the estimation of the balancing robot state
-			kalman_filter_nonlinear_update(input_to_wheel_L, continuous_current_position_201*1, Pitch - 0.31);	// update the estimation of the balancing robot state
+			kalman_filter_nonlinear_update(input_to_wheel_L, continuous_current_position_201*1, Pitch - 0.28);	// update the estimation of the balancing robot state
 			Pos_estim_L = kalman_filter_results[0];
 			Pos_dot_estim_L = kalman_filter_results[1];
 			Pitch_estim_L = kalman_filter_results[2];
 			Pitch_gyro_estim_L = kalman_filter_results[3];
-			kalman_filter_nonlinear_update(input_to_wheel_R, continuous_current_position_202*1, Pitch - 0.31);
+			kalman_filter_nonlinear_update(input_to_wheel_R, continuous_current_position_202*1, Pitch - 0.28);
 			Pos_estim_R = kalman_filter_results[0];
 			Pos_dot_estim_R = kalman_filter_results[1];
 			Pitch_estim_R = kalman_filter_results[2];
@@ -661,54 +668,122 @@ void move_balance(int16_t speedY, int16_t rad,int16_t balance){
 
 
 void sliding_mode_controller(int16_t speedY, int16_t rad,int16_t balance){
-
-//	current_position_202
 	
+	//definition of SMC parameters
 	cos_theta = cos(Pitch_estim);
 	sin_theta = sin(Pitch_estim);
-	
-	ref_Pitch_succ = 0 + (-speedY/1024.0)*(10*3.1415/180);					//0.1221 rad = (7 degrees)*pi/180 <- MAX inclination of the robot's angular position
-	ref_Pitch_gyro_succ = 0;
 	
 	a_smc_Pitch = ((m_top*l*g*sin_theta)/(I+m_top*l*l) + ((m_top*l*cos_theta)*(-b*Pos_dot_estim - m_top*l*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta))/((I+m_top*l*l)*(M_bottom+m_top))) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
 	b_smc_Pitch = ((2*m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)*r)) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
 	
-	control_signal_Pitch = (ref_Pitch_gyro_succ - Pitch_gyro_estim - Tcc*a_smc_Pitch + k2*(ref_Pitch_succ - Pitch_estim - Tcc*Pitch_gyro_estim) - smc_conv_coeff*((ref_Pitch_gyro_prec - Pitch_gyro_estim) + k2*(ref_Pitch_prec - Pitch_estim))) / (Tcc*b_smc_Pitch);
-	
-	ref_Pitch_prec = ref_Pitch_succ;
-	ref_Pitch_gyro_prec = ref_Pitch_gyro_succ;
-	
-	
-	
-	//SMC for Pos_dot
-	Pos_dot_estim_L = estimated_speed_201;
-	Pos_dot_estim_R = estimated_speed_202;
-	
-	ref_Pos_dot_L_succ = - Pos_dot_estim_L*0.3;
-	ref_Pos_dot_R_succ = - Pos_dot_estim_R*0.3;
-	
 	a_smc_Pos = (-b*(I + m_top*l*l)*Pos_dot_estim + m_top*m_top*l*l*g*cos_theta*sin_theta - m_top*l*(I + m_top*l*l)*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta) / ((I - m_top*l*l)*(M_bottom + m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
 	b_smc_Pos = (2/r) / ((I - m_top*l*l)*(M_bottom + m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
 	
-	control_signal_Pos_dot_L = (ref_Pos_dot_L_succ - Pos_dot_estim_L - Tcc*a_smc_Pos - smc_conv_coeff*(ref_Pos_dot_L_prec - Pos_dot_estim_L)) / (Tcc*b_smc_Pos);
-	control_signal_Pos_dot_R = (ref_Pos_dot_R_succ - Pos_dot_estim_R - Tcc*a_smc_Pos - smc_conv_coeff*(ref_Pos_dot_R_prec - Pos_dot_estim_R)) / (Tcc*b_smc_Pos);
-	
-	ref_Pos_dot_L_prec = ref_Pos_dot_L_succ;
-	ref_Pos_dot_R_prec = ref_Pos_dot_R_succ;
+	Pos_dot_estim_L = estimated_speed_201;			//use the estimation for Pos_dot directly provided by the wheels' encoders
+	Pos_dot_estim_R = estimated_speed_202;
 	
 	
+	//CHECK IF THE FUNCTION "fabs()" WORKS
 	
-	if ((speedY < 0 && Pos_dot_estim > 0) || (speedY > 0 && Pos_dot_estim < 0)) {
-		control_signal_Pos_dot_L *= 100;
-		control_signal_Pos_dot_R *= 100;
+	//references for the controlled states (i.e. Pos_dot, Pitch, Pitch_gyro)
+	if (speedY == 0) {
+		
+//		ref_Pitch_L_succ = (Pos_dot_estim_L/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to +-1 m/s
+//		if (ref_Pitch_L_succ > 8*3.1415/180) ref_Pitch_L_succ = 8*3.1415/180;
+//		else if (ref_Pitch_L_succ < - 8*3.1415/180) ref_Pitch_L_succ = - 8*3.1415/180;
+//		ref_Pitch_R_succ = (Pos_dot_estim_R/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to +-1 m/s
+//		if (ref_Pitch_R_succ > 8*3.1415/180) ref_Pitch_R_succ = 8*3.1415/180;
+//		else if (ref_Pitch_R_succ < - 8*3.1415/180) ref_Pitch_R_succ = - 8*3.1415/180;
+//		ref_Pitch_succ = (ref_Pitch_L_succ + ref_Pitch_R_succ) / 2;		//average of the value computed independently for the 2 wheels
+//		ref_Pitch_gyro_succ = 0;
+//		ref_Pos_dot_L_succ = -200*Pos_dot_estim_L*float_abs(1*Pos_dot_estim_L)/(1+float_abs(200*Pos_dot_estim_L));
+//		ref_Pos_dot_R_succ = -200*Pos_dot_estim_R*float_abs(1*Pos_dot_estim_R)/(1+float_abs(200*Pos_dot_estim_R));
+		ref_Pitch_succ = 0;
+		ref_Pitch_gyro_succ = 0;
+		ref_Pos_dot_L_succ = 0;
+		ref_Pos_dot_R_succ = 0;
+	}
+	else {
+		
+//		if ((speedY >= 0 && Pos_dot_estim_L >= 0) || (speedY <= 0 && Pos_dot_estim_L <= 0)) {
+//			
+//			ref_Pitch_L_succ = - (Pos_dot_estim_L/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
+//			if (ref_Pitch_L_succ > 8*3.1415/180) ref_Pitch_L_succ = 8*3.1415/180;
+//			else if (ref_Pitch_L_succ < - 8*3.1415/180) ref_Pitch_L_succ = - 8*3.1415/180;
+//			ref_Pos_dot_L_succ = (speedY/660.0)*max_Pos_dot_by_speedY;				// <- MAX linear velocity of +-1 m/s
+//		}
+//		else if ((speedY >= 0 && Pos_dot_estim_L <= 0) || (speedY <= 0 && Pos_dot_estim_L >= 0)) {
+//			
+//			ref_Pitch_L_succ = (Pos_dot_estim_L/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
+//			if (ref_Pitch_L_succ > 8*3.1415/180) ref_Pitch_L_succ = 8*3.1415/180;
+//			else if (ref_Pitch_L_succ < - 8*3.1415/180) ref_Pitch_L_succ = - 8*3.1415/180;
+//			ref_Pos_dot_L_succ = (speedY/660.0)*max_Pos_dot_by_speedY - 200*Pos_dot_estim_L*float_abs(1*Pos_dot_estim_L)/(1+float_abs(200*Pos_dot_estim_L));
+//		}
+//		if ((speedY >= 0 && Pos_dot_estim_R >= 0) || (speedY <= 0 && Pos_dot_estim_R <= 0)) {
+//			
+//			ref_Pitch_R_succ = - (Pos_dot_estim_R/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
+//			if (ref_Pitch_R_succ > 8*3.1415/180) ref_Pitch_R_succ = 8*3.1415/180;
+//			else if (ref_Pitch_R_succ < - 8*3.1415/180) ref_Pitch_R_succ = - 8*3.1415/180;
+//			ref_Pos_dot_R_succ = (speedY/660.0)*max_Pos_dot_by_speedY;				// <- MAX linear velocity of +-1 m/s
+//		}
+//		else if ((speedY >= 0 && Pos_dot_estim_R <= 0) || (speedY <= 0 && Pos_dot_estim_R >= 0)) {
+//			
+//			ref_Pitch_R_succ = (Pos_dot_estim_R/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
+//			if (ref_Pitch_R_succ > 8*3.1415/180) ref_Pitch_R_succ = 8*3.1415/180;
+//			else if (ref_Pitch_R_succ < - 8*3.1415/180) ref_Pitch_R_succ = - 8*3.1415/180;
+//			ref_Pos_dot_R_succ = (speedY/660.0)*max_Pos_dot_by_speedY - 200*Pos_dot_estim_R*float_abs(1*Pos_dot_estim_R)/(1+float_abs(200*Pos_dot_estim_R));
+//		}
+//		
+//		ref_Pitch_succ = (ref_Pitch_L_succ + ref_Pitch_R_succ) / 2;		//average of the value computed independently for the 2 wheels
+//		ref_Pitch_gyro_succ = 0;
+			
+			
+			ref_Pitch_succ = 0 + (-speedY/660.0)*(25*3.1415/180);
+			ref_Pitch_gyro_succ = 0;
+			ref_Pos_dot_L_succ = - Pitch_estim*gain_3;
+	    ref_Pos_dot_R_succ = - Pitch_estim*gain_3;
+//			if ((speedY > 0 && Pitch_estim < 0 && Pos_dot_estim_L < 0 && Pos_dot_estim_R < 0) || (speedY < 0 && Pitch_estim > 0 && Pos_dot_estim_L > 0 && Pos_dot_estim_R > 0)) {
+//				ref_Pitch_succ *= 2;
+//			}
 	}
 	
-	//control_signal_balance = 0;
-	control_signal_L = control_signal_Pitch + 0.1*control_signal_Pos_dot_L;	//0.01
-	control_signal_R = control_signal_Pitch + 0.1*control_signal_Pos_dot_R;	//0.01
 	
-	control_signal_L *= 25;		//35
-	control_signal_R *= 25;		//35
+//	ref_Pitch_succ = 0 + (-speedY/1024.0)*(10*3.1415/180);					//0.1221 rad = (7 degrees)*pi/180 <- MAX inclination of the robot's angular position
+//	ref_Pitch_gyro_succ = 0;
+//	ref_Pos_dot_L_succ = - Pos_dot_estim_L*0.3;
+//	ref_Pos_dot_R_succ = - Pos_dot_estim_R*0.3;
+	
+	
+	//computation of the control signals
+//	if (speedY == 0 && rad == 0) {
+//		//LQR
+//		control_signal_L = gain_4*(-0.3015*(ref_Pos_dot_L_succ - Pos_dot_estim_L) + 2.7169*(ref_Pitch_succ - Pitch_estim) + 0.6231*(ref_Pitch_gyro_succ - Pitch_gyro_estim));
+//		control_signal_R = gain_4*(-0.3015*(ref_Pos_dot_R_succ - Pos_dot_estim_R) + 2.7169*(ref_Pitch_succ - Pitch_estim) + 0.6231*(ref_Pitch_gyro_succ - Pitch_gyro_estim));
+//	}
+	//SMC
+	control_signal_Pitch = (ref_Pitch_gyro_succ - Pitch_gyro_estim - Tcc*a_smc_Pitch + k2*(ref_Pitch_succ - Pitch_estim - Tcc*Pitch_gyro_estim) - smc_conv_coeff*((ref_Pitch_gyro_prev - Pitch_gyro_estim) + k2*(ref_Pitch_prev - Pitch_estim))) / (Tcc*b_smc_Pitch);
+	control_signal_Pos_dot_L = (ref_Pos_dot_L_succ - Pos_dot_estim_L - Tcc*a_smc_Pos - smc_conv_coeff*(ref_Pos_dot_L_prev - Pos_dot_estim_L)) / (Tcc*b_smc_Pos);
+	control_signal_Pos_dot_R = (ref_Pos_dot_R_succ - Pos_dot_estim_R - Tcc*a_smc_Pos - smc_conv_coeff*(ref_Pos_dot_R_prev - Pos_dot_estim_R)) / (Tcc*b_smc_Pos);
+		
+	control_signal_L = gain_2*control_signal_Pitch + gain_1*control_signal_Pos_dot_L;	//0.01
+	control_signal_R = gain_2*control_signal_Pitch + gain_1*control_signal_Pos_dot_R;	//0.01
+	
+//	if ((speedY < 0 && Pos_dot_estim > 0) || (speedY > 0 && Pos_dot_estim < 0)) {
+//		control_signal_Pos_dot_L *= 100;
+//		control_signal_Pos_dot_R *= 100;
+//	}
+	
+//	if ((speedY > 0 && Pitch_estim < 0 && Pos_dot_estim_L < 0 && Pos_dot_estim_R < 0) || (speedY < 0 && Pitch_estim > 0 && Pos_dot_estim_L > 0 && Pos_dot_estim_R > 0)) {
+//		control_signal_Pos_dot_L *= 1.8;
+//		control_signal_Pos_dot_R *= 1.8;
+//	}
+	
+	//control_signal_Pitch = 0;
+//	control_signal_L = gain_2*control_signal_Pitch + gain_1*control_signal_Pos_dot_L;	//0.01
+//	control_signal_R = gain_2*control_signal_Pitch + gain_1*control_signal_Pos_dot_R;	//0.01
+	
+//	control_signal_L *= 25;		//35
+//	control_signal_R *= 25;		//35
 	
 	if (speedY == 0 && rad == 0) {
 		control_signal_L *= 1.3;	//1.3
@@ -716,10 +791,17 @@ void sliding_mode_controller(int16_t speedY, int16_t rad,int16_t balance){
 	}
 	
 	speedL = control_signal_L;
-	speedR = -control_signal_R;
+	speedR = - control_signal_R;
 
 	CMControlOut(speedL+rad*2,speedR+rad*2,0,0);
 	//CAN1_Send_Bottom(speedL,speedR,0,0); //to send the control signals directly to the wheels motors
+	
+	
+	//update of the references for next iteration of the controller
+	ref_Pos_dot_L_prev = ref_Pos_dot_L_succ;
+	ref_Pos_dot_R_prev = ref_Pos_dot_R_succ;
+	ref_Pitch_prev = ref_Pitch_succ;
+	ref_Pitch_gyro_prev = ref_Pitch_gyro_succ;
 }
 
 
@@ -1115,6 +1197,11 @@ void kalman_filter_nonlinear_update(int16_t u, float y1, float y3)
 
 
 
+float float_abs(float x) {
+	
+	if (x >= 0) return x;
+	else return -x;
+}
 
 
 

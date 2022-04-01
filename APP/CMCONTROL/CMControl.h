@@ -23,6 +23,7 @@ void sliding_mode_controller(int16_t speedY, int16_t rad,int16_t balance);
 void kalman_filter_update(int16_t u, float y3, float y4);
 void kalman_filter_nonlinear_update(int16_t u, float y1, float y3);
 void computeContiguousEncoderPos();
+float float_abs(float x);
 
 extern float speed_limite;
 extern u8 quick_spin_flag;
