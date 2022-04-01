@@ -75,36 +75,6 @@ float k_T_F = 26.667;     // coefficient that, given a torque T, computes the li
 
 
 /* entries of the dynamics matrix (A) */
-//contiguous time 2x2
-//float A33 = 0;
-//float A34 = 1;
-//float A43 = 0;
-//float A44 = 36.9312;
-//contiguous time 3x3
-//float A22 = -0.0279;
-//float A23 = 1.1210;
-//float A24 = 0;
-//float A32 = 0;
-//float A33 = 0;
-//float A34 = 1;
-//float A42 = -0.0457;
-//float A43 = 17.9361;
-//float A44 = 0;
-//discrete time 2x2
-//float A33 = 1.0018;
-//float A34 = 0.01;
-//float A43 = 0.3695;
-//float A44 = 1.0018;
-//discrete time 3x3
-//float A22 = 1;
-//float A23 = 0.0011;
-//float A24 = 0;
-//float A32 = 0;
-//float A33 = 1;
-//float A34 = 0.0010;
-//float A42 = 0;	//before was -0.0457, but it was probably an error
-//float A43 = 0.0179;
-//float A44 = 0;
 //discrete time 4x4 (linearization of nonlinear model)
 float A11 = 1;
 float A12 = 0.0010;
@@ -123,38 +93,18 @@ float A42 = 0;
 float A43 = 0.0220;
 float A44 = 1;
 
+float A[4][4];
+
 /* entries of the inputs matrix (B) */
-//contiguous time 2x1
-//float B3 = 0;
-//float B4 = 0.9402;
-//contiguous time 3x1
-//float B2 = 7.9583;
-//float B3 = 0;
-//float B4 = 13.0463;
-//discrete time 2x1
-//float B3 = 0;
-//float B4 = 0.0094;
-//discrete time 3x1
-//float B2 = 0.0080;
-//float B3 = 0;
-//float B4 = 0.0130;
 //discrete time 4x1 (linearization of nonlinear model)
 float B1 = 0;
 float B2 = 0.0249;
 float B3 = 0;
 float B4 = 0.0100;
 
+float B[4];
+
 /* entries of the outputs matrix (C) */
-//Pitch and Pitch_gyro are measured from the sensors
-//float C22 = 0;
-//float C23 = 0;
-//float C24 = 0;
-//float C32 = 0;
-//float C33 = 1;
-//float C34 = 0;
-//float C42 = 0;
-//float C43 = 0;
-//float C44 = 1;
 //Pos and Pitch are measured from the sensors
 float C11 = 1;
 float C12 = 0;
@@ -165,14 +115,9 @@ float C32 = 0;
 float C33 = 1;
 float C34 = 0;
 
+float C[4][4];
+
 /* initial entries of the Kalman filter matrix (Kf) */
-//Pitch and Pitch_gyro are measured from the sensors, and Pos_dot is estimated
-//float Kf23;
-//float Kf24;
-//float Kf33;
-//float Kf34;
-//float Kf43;
-//float Kf44;
 //Pos and Pitch are measured from the sensors, and Pos_dot and Pitch_gyro are estimated
 float Kf11;
 float Kf13;
@@ -183,17 +128,9 @@ float Kf33;
 float Kf41;
 float Kf43;
 
+float Kf[4][4];
+
 /* initial entries of the error covariance matrix of 'x - x_estim' (P) */
-//Pos_dot, Pitch and Pitch_gyro
-//float P22 = 1;
-//float P23 = 0;
-//float P24 = 0;
-//float P32 = 0;
-//float P33 = 1;
-//float P34 = 0;
-//float P42 = 0;
-//float P43 = 0;
-//float P44 = 1;
 //Pos, Pos_dot, Pitch and Pitch_gyro
 float P11 = 1;
 float P12 = 0;
@@ -212,17 +149,9 @@ float P42 = 0;
 float P43 = 0;
 float P44 = 1;
 
+float P[4][4];
+
 /* entries of the predicted error covariance matrix of 'x - x_estim' (P_pred) */
-//Pos_dot, Pitch and Pitch_gyro
-//float P_pred22;
-//float P_pred23;
-//float P_pred24;
-//float P_pred32;
-//float P_pred33;
-//float P_pred34;
-//float P_pred42;
-//float P_pred43;
-//float P_pred44;
 //Pos, Pos_dot, Pitch and Pitch_gyro
 float P_pred11;
 float P_pred12;
@@ -240,6 +169,8 @@ float P_pred41;
 float P_pred42;
 float P_pred43;
 float P_pred44;
+
+float P_pred[4][4];
 
 /* entries of the disturbance covariance matrix (Vd) */
 float Vd11 = 0.1;
@@ -259,6 +190,8 @@ float Vd42 = 0;
 float Vd43 = 0;
 float Vd44 = 0.1;
 
+float Vd[4][4];
+
 /* entries of the noise covariance matrix (Vn) */
 float Vn11 = 1;
 float Vn12 = 0;
@@ -276,6 +209,8 @@ float Vn41 = 0;
 float Vn42 = 0;
 float Vn43 = 0;
 float Vn44 = 1;
+
+float Vn[4][4];
 
 /* entries of the LQR gain (K) */
 //float K3 = 79.1914;
@@ -304,6 +239,8 @@ float tmp42;
 float tmp43;
 float tmp44;
 
+float tmp[4][4];
+
 /* entries of the matrix A*P*A^(T) (at every iteration of the Kalman Filter it gets computed from scratch) */
 float APA11;
 float APA12;
@@ -321,6 +258,8 @@ float APA41;
 float APA42;
 float APA43;
 float APA44;
+
+float APA[4][4];
 
 /* entries of the matrix C*P_prec*C^(T) (at every iteration of the Kalman Filter it gets computed from scratch) */
 float CPC11;
@@ -340,35 +279,44 @@ float CPC42;
 float CPC43;
 float CPC44;
 
+float CPC[4][4];
+
 /* entries of the innovation covariance matrix (S) */
-//Pitch and Pitch_gyro are measured by the sensors
-//float S33;
-//float S34;
-//float S43;
-//float S44;
 //Pos and Pitch are measured by the sensors
 float S11;
 float S13;
 float S31;
 float S33;
 
+float S[4][4];
+float S_array_format[16];
+
 /* entries of the inversed innovation covariance matrix (S^(-1)) */
-//Pitch and Pitch_gyro are measured by the sensors
-//float S_inv33;
-//float S_inv34;
-//float S_inv43;
-//float S_inv44;
 //Pos and Pitch are measured by the sensors
-float S_inv11;
-float S_inv13;
-float S_inv31;
-float S_inv33;
+//float S_inv11;
+//float S_inv13;
+//float S_inv31;
+//float S_inv33;
+float S_inv[4][4];
+float S_inv_array_format[16];
+
+/* output measurements array (y) */
+float y[4];
 
 /* entries of the output prediction error array (delta_y) */
-float delta_y1;
-float delta_y2;
-float delta_y3;
-float delta_y4;
+//float delta_y1;
+//float delta_y2;
+//float delta_y3;
+//float delta_y4;
+float delta_y[4];
+
+/* prediction and estimations of the robot's state */
+float state_pred[4];
+float state_estim[4];
+
+/* 4x4 float identity matrix */
+float IdentityMatrix[4][4];
+
 
 /* scalar variables */
 float Pos_pred;									//balancing robot's linear position on the ground predicted by the Kalman filter
@@ -379,6 +327,8 @@ float Pos_estim = 0;
 float Pos_dot_estim = 0;
 float error_Pos;
 float error_Pos_dot;
+float error_Pos_dot_L;
+float error_Pos_dot_R;
 float error_Pitch;
 float error_Pitch_gyro;
 float S_det;										//used to store the determinant of the innovation matrix S
@@ -400,18 +350,18 @@ float b_smc_Pos;
 float smc_conv_coeff = 0.1;			//convergence coefficient of the discrete-time sliding mode controller: |S(k+1)| <= smc_conv_coeff * |S(k)|
 float ref_Pitch_prev = 0;				//previous reference signal for the robot's angular position
 float ref_Pitch_gyro_prev = 0;	//previous reference signal for the robot's angular velocity
-float ref_Pitch_succ;						//current reference signal for the robot's angular position
-float ref_Pitch_L_succ;
-float ref_Pitch_R_succ;
-float ref_Pitch_gyro_succ;			//current reference signal for the robot's angular velocity
+float ref_Pitch;								//current reference signal for the robot's angular position
+float ref_Pitch_L;
+float ref_Pitch_R;
+float ref_Pitch_gyro;						//current reference signal for the robot's angular velocity
 float ref_Pos_dot_L_prev;
 float ref_Pos_dot_R_prev;
-float ref_Pos_dot_L_succ;
-float ref_Pos_dot_R_succ;
+float ref_Pos_dot_L;
+float ref_Pos_dot_R;
 float k2 = 4;										//coeffient for the sliding function: S(k) = e_pitch_gyro(k) + k2*e_pitch(k)
 float speedA_value;
 float speedB_value;
-float kalman_filter_results[4];
+//float kalman_filter_results[4];
 float Pitch_estim_L;
 float Pitch_estim_R;
 float Pitch_gyro_estim_L;
@@ -420,11 +370,14 @@ float Pos_estim_L;
 float Pos_estim_R;
 float Pos_dot_estim_L;
 float Pos_dot_estim_R;
-float gain_1 = 600;
-float gain_2 = 60;
-float gain_3 = 6;
-float gain_4 = 1;
+float gain_Pos_dot_to_wheels = 600;
+float gain_Pitch_to_wheels = 60;
+float gain_Pos_dot_from_Pitch = 6;
+float gain_LQR_control_signal = 1;		//it was 3000 maybe
 float max_Pos_dot_by_speedY = 2;			//MAX m/s generable by the speedY command
+float Pitch_balance_offset = 0.28;		//pitch angle (in radiants) at which the robot reaches the balance
+int16_t forward_backward_command = 0;
+int16_t left_right_command = 0;
 
 
 /* variables to contiguously track the position of the motors' encoder */
@@ -442,7 +395,7 @@ float Pitch_gyro_measurements[1000];		//array of pitch velocity measurements
 float Pitch_estimations[1000];					//array of pitch position estimations
 float Pitch_gyro_estimations[1000];			//array of pitch velocity estimations
 float white_noise_input[1000];					//array of white noise sent to the wheels
-unsigned int i = 0;								//counter for the arrays in which measurements are stored
+unsigned int count_measurements = 0;		//counter for the arrays in which measurements are stored
 
 
 
@@ -486,22 +439,22 @@ void CMControlLoop(void)
 			//CMbalanceVal = caculate_balance(0.15*57.3);
 			//move_balance(RC_Ex_Ctl.rc.ch1/5.12,0.5f*(RC_Ex_Ctl.rc.ch2),CMbalanceVal);
 			
-			/* NOTE: Kalman Filter has to be executed before than the LQR controller (think about the control system's block diagram) */
-			//kalman_filter_update(input_to_wheels, Pitch - 0.28, Pitch_gyro);				// update the estimation of the balancing robot state
-			kalman_filter_nonlinear_update(input_to_wheel_L, continuous_current_position_201*1, Pitch - 0.28);	// update the estimation of the balancing robot state
-			Pos_estim_L = kalman_filter_results[0];
-			Pos_dot_estim_L = kalman_filter_results[1];
-			Pitch_estim_L = kalman_filter_results[2];
-			Pitch_gyro_estim_L = kalman_filter_results[3];
-			kalman_filter_nonlinear_update(input_to_wheel_R, continuous_current_position_202*1, Pitch - 0.28);
-			Pos_estim_R = kalman_filter_results[0];
-			Pos_dot_estim_R = kalman_filter_results[1];
-			Pitch_estim_R = kalman_filter_results[2];
-			Pitch_gyro_estim_R = kalman_filter_results[3];
+			
+			// update the estimation of the balancing robot's state (considering the robot's angulare position/velocity and the linear position/velocity on the ground of both left and right wheel)
+			kalman_filter_nonlinear_update(input_to_wheel_L, continuous_current_position_201, estimated_speed_201, Pitch - Pitch_balance_offset, Pitch_gyro, &Pos_estim_L, &Pos_dot_estim_L, &Pitch_estim_L, &Pitch_gyro_estim_L);
+			kalman_filter_nonlinear_update(input_to_wheel_R, continuous_current_position_202, estimated_speed_202, Pitch - Pitch_balance_offset, Pitch_gyro, &Pos_estim_R, &Pos_dot_estim_R, &Pitch_estim_R, &Pitch_gyro_estim_R);
+			
+			// take the average of the angular position/velocity estimated by considering separately left and right wheel
 			Pitch_estim = (Pitch_estim_L + Pitch_estim_R) / 2;
 			Pitch_gyro_estim = (Pitch_gyro_estim_L + Pitch_gyro_estim_R) / 2;
-			//move_balance(RC_Ex_Ctl.rc.ch1,RC_Ex_Ctl.rc.ch0,CMbalanceVal);															// LQR controller
-			sliding_mode_controller(RC_Ex_Ctl.rc.ch1,RC_Ex_Ctl.rc.ch0,CMbalanceVal);
+			
+			// commands sent by means of the joystick
+			forward_backward_command = RC_Ex_Ctl.rc.ch1;
+			left_right_command = RC_Ex_Ctl.rc.ch0;
+			
+			// control the robot
+			move_balance(RC_Ex_Ctl.rc.ch1, RC_Ex_Ctl.rc.ch0);		//POSSO CAMBIARE NOME ALLA FUNZIONE "move_balance()"?
+			
     }
     else if(remoteState == STANDBY_STATE )
     {
@@ -561,113 +514,135 @@ float caculate_balance(float Setposition){
 float history[10]={0,0,0,0,0,0,0,0,0,0};
 int16_t history_pos=0;
 
-void move_balance(int16_t speedY, int16_t rad,int16_t balance){
-//	float max_speed=0;
-//	speedL = speedY + balance + rad;
-//	speedR = -speedY - balance + rad;
-//	
-//	if(fabs(speedL)>max_speed)
-//        max_speed=fabs(speedL);
-//	if(fabs(speedR)>max_speed)
-//			max_speed=fabs(speedR);
-//	
-//	if(max_speed>max_output_speed)
-//	{
-//		speedL*=max_output_speed/max_speed;
-//		speedR*=max_output_speed/max_speed;
-//	}
-//	float now_Pitch =0;
-//	if (abs(Pitch)>0.01){
-//		now_Pitch=Pitch;
-//	}
+void move_balance(int16_t speedY, int16_t rad){
 	
-//	if (speedY == 0 && rad == 0) {
-//		currentPosL = current_position_201;
-//		if (precPosL - currentPosL > 4000) {
-//			counterRoundsL += 1;
-//		}
-//		contiguousPosEncoderL = 
-//	}
-//	else {
-//		
-//		mantainPosEncoderL = 0;
-//		mantainPosEncoderR = 0;
-//	}
-//	
-//	current_position_202
+	Pos_dot_estim_L = estimated_speed_201;			//use the estimation for Pos_dot directly provided by the wheels' encoders
+	Pos_dot_estim_R = estimated_speed_202;
 	
-	
-	
-	// LQR control algorithm
-	error_Pitch = (0 - Pitch_estim);				// I deleted the *57.3, because the Pitch and Pitch_gyro have to influence the LQR as much as Pos_dot
-	if (speedY != 0) {
-		
-		error_Pitch += (-speedY/1024.0)*0.1221;			// sets the Pitch target in order to go forward/backward
-	}
-	else if (rad == 0) {
-		
-//	error_Pitch += continuous_current_position_201*0.0005;			// sets the Pitch target in order to mantain the linear position on the ground
-	}
-	
-	error_Pitch_gyro = (0 - Pitch_gyro_estim);
-	
-//	// Huber loss for Pitch
-//	if (error_Pitch >= 0) {
-//		if (error_Pitch < 0.12) error_Pitch *= error_Pitch;
-//	}
-//	else {
-//		if (-error_Pitch < 0.12) error_Pitch *= error_Pitch;
-//	}
-//	
-//	// Huber loss for Pitch_gyro
-//	if (error_Pitch_gyro >= 0) {
-//		if (error_Pitch_gyro < 0.12) error_Pitch_gyro *= error_Pitch_gyro;
-//	}
-//	else {
-//		if (-error_Pitch_gyro < 0.12) error_Pitch_gyro *= error_Pitch_gyro;
-//	}
-	
-	control_signal = error_Pitch*K3 + error_Pitch_gyro*K4;
-	
+	//references for the controlled states (i.e. Pos_dot, Pitch, Pitch_gyro)
 	if (speedY == 0) {
 		
-		// enable the control of the linear velocity on the ground
-		error_Pos_dot = (0 - Pos_dot_estim);
-		control_signal += error_Pos_dot*K2;
-		
-		if (rad == 0) {
-			
-			// enable the control of the linear position on the ground
-//			control_signal += continuous_current_position_201*0.005;
+		if (0) {
+			ref_Pitch_L = (Pos_dot_estim_L/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to +-1 m/s
+			if (ref_Pitch_L > 8*3.1415/180) ref_Pitch_L = 8*3.1415/180;
+			else if (ref_Pitch_L < - 8*3.1415/180) ref_Pitch_L = - 8*3.1415/180;
+			ref_Pitch_R = (Pos_dot_estim_R/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to +-1 m/s
+			if (ref_Pitch_R > 8*3.1415/180) ref_Pitch_R = 8*3.1415/180;
+			else if (ref_Pitch_R < - 8*3.1415/180) ref_Pitch_R = - 8*3.1415/180;
+			ref_Pitch = (ref_Pitch_L + ref_Pitch_R) / 2;		//average of the value computed independently for the 2 wheels
+			ref_Pitch_gyro = 0;
+			ref_Pos_dot_L = -200*Pos_dot_estim_L*float_abs(1*Pos_dot_estim_L)/(1+float_abs(200*Pos_dot_estim_L));
+			ref_Pos_dot_R = -200*Pos_dot_estim_R*float_abs(1*Pos_dot_estim_R)/(1+float_abs(200*Pos_dot_estim_R));
 		}
-		//else contiguousEncoderPos = 0;
+		else {
+			ref_Pitch = 0;
+			ref_Pitch_gyro = 0;
+			ref_Pos_dot_L = 0;
+			ref_Pos_dot_R = 0;
+		}
 	}
-	//else contiguousEncoderPos = 0;
+	else {
+		
+		if (0) {
+			if ((speedY >= 0 && Pos_dot_estim_L >= 0) || (speedY <= 0 && Pos_dot_estim_L <= 0)) {
+				
+				ref_Pitch_L = - (Pos_dot_estim_L/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
+				if (ref_Pitch_L > 8*3.1415/180) ref_Pitch_L = 8*3.1415/180;
+				else if (ref_Pitch_L < - 8*3.1415/180) ref_Pitch_L = - 8*3.1415/180;
+				ref_Pos_dot_L = (speedY/660.0)*max_Pos_dot_by_speedY;				// <- MAX linear velocity of +-1 m/s
+			}
+			else if ((speedY >= 0 && Pos_dot_estim_L <= 0) || (speedY <= 0 && Pos_dot_estim_L >= 0)) {
+				
+				ref_Pitch_L = (Pos_dot_estim_L/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
+				if (ref_Pitch_L > 8*3.1415/180) ref_Pitch_L = 8*3.1415/180;
+				else if (ref_Pitch_L < - 8*3.1415/180) ref_Pitch_L = - 8*3.1415/180;
+				ref_Pos_dot_L = (speedY/660.0)*max_Pos_dot_by_speedY - 200*Pos_dot_estim_L*float_abs(1*Pos_dot_estim_L)/(1+float_abs(200*Pos_dot_estim_L));
+			}
+			if ((speedY >= 0 && Pos_dot_estim_R >= 0) || (speedY <= 0 && Pos_dot_estim_R <= 0)) {
+				
+				ref_Pitch_R = - (Pos_dot_estim_R/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
+				if (ref_Pitch_R > 8*3.1415/180) ref_Pitch_R = 8*3.1415/180;
+				else if (ref_Pitch_R < - 8*3.1415/180) ref_Pitch_R = - 8*3.1415/180;
+				ref_Pos_dot_R = (speedY/660.0)*max_Pos_dot_by_speedY;				// <- MAX linear velocity of +-1 m/s
+			}
+			else if ((speedY >= 0 && Pos_dot_estim_R <= 0) || (speedY <= 0 && Pos_dot_estim_R >= 0)) {
+				
+				ref_Pitch_R = (Pos_dot_estim_R/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
+				if (ref_Pitch_R > 8*3.1415/180) ref_Pitch_R = 8*3.1415/180;
+				else if (ref_Pitch_R < - 8*3.1415/180) ref_Pitch_R = - 8*3.1415/180;
+				ref_Pos_dot_R = (speedY/660.0)*max_Pos_dot_by_speedY - 200*Pos_dot_estim_R*float_abs(1*Pos_dot_estim_R)/(1+float_abs(200*Pos_dot_estim_R));
+			}
+			
+			ref_Pitch = (ref_Pitch_L + ref_Pitch_R) / 2;		//average of the value computed independently for the 2 wheels
+			ref_Pitch_gyro = 0;
+		}
+		else {
+			ref_Pitch = 0 + (-speedY/660.0)*(25*3.1415/180);
+			ref_Pitch_gyro = 0;
+			ref_Pos_dot_L = - Pitch_estim*gain_Pos_dot_from_Pitch;
+	    ref_Pos_dot_R = - Pitch_estim*gain_Pos_dot_from_Pitch;
+//			if ((speedY > 0 && Pitch_estim < 0 && Pos_dot_estim_L < 0 && Pos_dot_estim_R < 0) || (speedY < 0 && Pitch_estim > 0 && Pos_dot_estim_L > 0 && Pos_dot_estim_R > 0)) {
+//				ref_Pitch_succ *= 2;
+//			}
+		}
+	}
 	
-	control_signal *= 10000;
 	
-	speedL = control_signal;
+	//selection of the controller
+	if (0) {
+		LQR_controller();
+	}
+	else {
+		sliding_mode_controller();
+	}
 	
 	
-	//theta reference without KF: 0.27
-	//theta reference with KF: 0.28
-//	speedL = 6*((0.28+(-speedY/1024.0)*0.1221-Pitch)*57.3*K3+(0-Pitch_gyro)*57.3*K4);		// LQR control algorithm
-//	if (0.265 >= Pitch) {
-//		if (0.265-Pitch < 0.12) speedL *= 1.2;
-//	}
-//	else {
-//		if (Pitch-0.265 < 0.12) speedL *= 1.2;
-//	}
-//	speedL = MotorCurrentLegalize(speedL,5000);
+	if (speedY == 0 && rad == 0) {
+		control_signal_L *= 1.3;	//1.3
+		control_signal_R *= 1.3;	//1.3
+	}
 	
-	speedR = -speedL;
+	speedL = control_signal_L;
+	speedR = - control_signal_R;
 
-	CMControlOut(speedL+rad*2,speedR+rad*2,0,0);
-	//CAN1_Send_Bottom(speedL,speedR,0,0); //to send the control signals directly to the wheels motors
+	if (1) {
+		CMControlOut(speedL+rad*2,speedR+rad*2,0,0);		//send the control signals to the PID controllers of the wheels' motors
+	}
+	else {
+		speedL = MotorCurrentLegalize(speedL,5000);
+		speedR = MotorCurrentLegalize(speedR,5000);
+		input_to_wheel_L = speedL;
+		input_to_wheel_R = speedR;
+		CAN1_Send_Bottom(speedL,speedR,0,0); 						//send the control signals directly to the wheels' motors
+	}
+	
+	//update of the references for next iteration of the controller
+	ref_Pos_dot_L_prev = ref_Pos_dot_L;
+	ref_Pos_dot_R_prev = ref_Pos_dot_R;
+	ref_Pitch_prev = ref_Pitch;
+	ref_Pitch_gyro_prev = ref_Pitch_gyro;
 }
 
+void LQR_controller() {
+	
+	// LQR control algorithm
+	error_Pitch = (ref_Pitch - Pitch_estim);
+	error_Pitch_gyro = (ref_Pitch_gyro - Pitch_gyro_estim);
+	error_Pos_dot_L = (ref_Pos_dot_L - Pos_dot_estim_L);
+	error_Pos_dot_R = (ref_Pos_dot_R - Pos_dot_estim_R);
+	
+//	// Huber loss for Pitch
+//	if (float_abs(error_Pitch) < 0.12) error_Pitch *= error_Pitch;
+	
+//	// Huber loss for Pitch_gyro
+//	if (float_abs(error_Pitch_gyro) < 0.12) error_Pitch_gyro *= error_Pitch_gyro;
 
-void sliding_mode_controller(int16_t speedY, int16_t rad,int16_t balance){
+	control_signal_L = gain_LQR_control_signal*(-0.3015*error_Pos_dot_L + 2.7169*error_Pitch + 0.6231*error_Pitch_gyro);
+	control_signal_R = gain_LQR_control_signal*(-0.3015*error_Pos_dot_R + 2.7169*error_Pitch + 0.6231*error_Pitch_gyro);
+	
+}
+
+void sliding_mode_controller() {
 	
 	//definition of SMC parameters
 	cos_theta = cos(Pitch_estim);
@@ -679,348 +654,18 @@ void sliding_mode_controller(int16_t speedY, int16_t rad,int16_t balance){
 	a_smc_Pos = (-b*(I + m_top*l*l)*Pos_dot_estim + m_top*m_top*l*l*g*cos_theta*sin_theta - m_top*l*(I + m_top*l*l)*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta) / ((I - m_top*l*l)*(M_bottom + m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
 	b_smc_Pos = (2/r) / ((I - m_top*l*l)*(M_bottom + m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
 	
-	Pos_dot_estim_L = estimated_speed_201;			//use the estimation for Pos_dot directly provided by the wheels' encoders
-	Pos_dot_estim_R = estimated_speed_202;
 	
-	
-	//CHECK IF THE FUNCTION "fabs()" WORKS
-	
-	//references for the controlled states (i.e. Pos_dot, Pitch, Pitch_gyro)
-	if (speedY == 0) {
-		
-//		ref_Pitch_L_succ = (Pos_dot_estim_L/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to +-1 m/s
-//		if (ref_Pitch_L_succ > 8*3.1415/180) ref_Pitch_L_succ = 8*3.1415/180;
-//		else if (ref_Pitch_L_succ < - 8*3.1415/180) ref_Pitch_L_succ = - 8*3.1415/180;
-//		ref_Pitch_R_succ = (Pos_dot_estim_R/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to +-1 m/s
-//		if (ref_Pitch_R_succ > 8*3.1415/180) ref_Pitch_R_succ = 8*3.1415/180;
-//		else if (ref_Pitch_R_succ < - 8*3.1415/180) ref_Pitch_R_succ = - 8*3.1415/180;
-//		ref_Pitch_succ = (ref_Pitch_L_succ + ref_Pitch_R_succ) / 2;		//average of the value computed independently for the 2 wheels
-//		ref_Pitch_gyro_succ = 0;
-//		ref_Pos_dot_L_succ = -200*Pos_dot_estim_L*float_abs(1*Pos_dot_estim_L)/(1+float_abs(200*Pos_dot_estim_L));
-//		ref_Pos_dot_R_succ = -200*Pos_dot_estim_R*float_abs(1*Pos_dot_estim_R)/(1+float_abs(200*Pos_dot_estim_R));
-		ref_Pitch_succ = 0;
-		ref_Pitch_gyro_succ = 0;
-		ref_Pos_dot_L_succ = 0;
-		ref_Pos_dot_R_succ = 0;
-	}
-	else {
-		
-//		if ((speedY >= 0 && Pos_dot_estim_L >= 0) || (speedY <= 0 && Pos_dot_estim_L <= 0)) {
-//			
-//			ref_Pitch_L_succ = - (Pos_dot_estim_L/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
-//			if (ref_Pitch_L_succ > 8*3.1415/180) ref_Pitch_L_succ = 8*3.1415/180;
-//			else if (ref_Pitch_L_succ < - 8*3.1415/180) ref_Pitch_L_succ = - 8*3.1415/180;
-//			ref_Pos_dot_L_succ = (speedY/660.0)*max_Pos_dot_by_speedY;				// <- MAX linear velocity of +-1 m/s
-//		}
-//		else if ((speedY >= 0 && Pos_dot_estim_L <= 0) || (speedY <= 0 && Pos_dot_estim_L >= 0)) {
-//			
-//			ref_Pitch_L_succ = (Pos_dot_estim_L/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
-//			if (ref_Pitch_L_succ > 8*3.1415/180) ref_Pitch_L_succ = 8*3.1415/180;
-//			else if (ref_Pitch_L_succ < - 8*3.1415/180) ref_Pitch_L_succ = - 8*3.1415/180;
-//			ref_Pos_dot_L_succ = (speedY/660.0)*max_Pos_dot_by_speedY - 200*Pos_dot_estim_L*float_abs(1*Pos_dot_estim_L)/(1+float_abs(200*Pos_dot_estim_L));
-//		}
-//		if ((speedY >= 0 && Pos_dot_estim_R >= 0) || (speedY <= 0 && Pos_dot_estim_R <= 0)) {
-//			
-//			ref_Pitch_R_succ = - (Pos_dot_estim_R/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
-//			if (ref_Pitch_R_succ > 8*3.1415/180) ref_Pitch_R_succ = 8*3.1415/180;
-//			else if (ref_Pitch_R_succ < - 8*3.1415/180) ref_Pitch_R_succ = - 8*3.1415/180;
-//			ref_Pos_dot_R_succ = (speedY/660.0)*max_Pos_dot_by_speedY;				// <- MAX linear velocity of +-1 m/s
-//		}
-//		else if ((speedY >= 0 && Pos_dot_estim_R <= 0) || (speedY <= 0 && Pos_dot_estim_R >= 0)) {
-//			
-//			ref_Pitch_R_succ = (Pos_dot_estim_R/1)*(8*3.1415/180);		// <- MAX inclination of +-8 degrees, corresponding to -+1 m/s
-//			if (ref_Pitch_R_succ > 8*3.1415/180) ref_Pitch_R_succ = 8*3.1415/180;
-//			else if (ref_Pitch_R_succ < - 8*3.1415/180) ref_Pitch_R_succ = - 8*3.1415/180;
-//			ref_Pos_dot_R_succ = (speedY/660.0)*max_Pos_dot_by_speedY - 200*Pos_dot_estim_R*float_abs(1*Pos_dot_estim_R)/(1+float_abs(200*Pos_dot_estim_R));
-//		}
-//		
-//		ref_Pitch_succ = (ref_Pitch_L_succ + ref_Pitch_R_succ) / 2;		//average of the value computed independently for the 2 wheels
-//		ref_Pitch_gyro_succ = 0;
-			
-			
-			ref_Pitch_succ = 0 + (-speedY/660.0)*(25*3.1415/180);
-			ref_Pitch_gyro_succ = 0;
-			ref_Pos_dot_L_succ = - Pitch_estim*gain_3;
-	    ref_Pos_dot_R_succ = - Pitch_estim*gain_3;
-//			if ((speedY > 0 && Pitch_estim < 0 && Pos_dot_estim_L < 0 && Pos_dot_estim_R < 0) || (speedY < 0 && Pitch_estim > 0 && Pos_dot_estim_L > 0 && Pos_dot_estim_R > 0)) {
-//				ref_Pitch_succ *= 2;
-//			}
-	}
-	
-	
-//	ref_Pitch_succ = 0 + (-speedY/1024.0)*(10*3.1415/180);					//0.1221 rad = (7 degrees)*pi/180 <- MAX inclination of the robot's angular position
-//	ref_Pitch_gyro_succ = 0;
-//	ref_Pos_dot_L_succ = - Pos_dot_estim_L*0.3;
-//	ref_Pos_dot_R_succ = - Pos_dot_estim_R*0.3;
-	
-	
-	//computation of the control signals
-//	if (speedY == 0 && rad == 0) {
-//		//LQR
-//		control_signal_L = gain_4*(-0.3015*(ref_Pos_dot_L_succ - Pos_dot_estim_L) + 2.7169*(ref_Pitch_succ - Pitch_estim) + 0.6231*(ref_Pitch_gyro_succ - Pitch_gyro_estim));
-//		control_signal_R = gain_4*(-0.3015*(ref_Pos_dot_R_succ - Pos_dot_estim_R) + 2.7169*(ref_Pitch_succ - Pitch_estim) + 0.6231*(ref_Pitch_gyro_succ - Pitch_gyro_estim));
-//	}
 	//SMC
-	control_signal_Pitch = (ref_Pitch_gyro_succ - Pitch_gyro_estim - Tcc*a_smc_Pitch + k2*(ref_Pitch_succ - Pitch_estim - Tcc*Pitch_gyro_estim) - smc_conv_coeff*((ref_Pitch_gyro_prev - Pitch_gyro_estim) + k2*(ref_Pitch_prev - Pitch_estim))) / (Tcc*b_smc_Pitch);
-	control_signal_Pos_dot_L = (ref_Pos_dot_L_succ - Pos_dot_estim_L - Tcc*a_smc_Pos - smc_conv_coeff*(ref_Pos_dot_L_prev - Pos_dot_estim_L)) / (Tcc*b_smc_Pos);
-	control_signal_Pos_dot_R = (ref_Pos_dot_R_succ - Pos_dot_estim_R - Tcc*a_smc_Pos - smc_conv_coeff*(ref_Pos_dot_R_prev - Pos_dot_estim_R)) / (Tcc*b_smc_Pos);
-		
-	control_signal_L = gain_2*control_signal_Pitch + gain_1*control_signal_Pos_dot_L;	//0.01
-	control_signal_R = gain_2*control_signal_Pitch + gain_1*control_signal_Pos_dot_R;	//0.01
-	
-//	if ((speedY < 0 && Pos_dot_estim > 0) || (speedY > 0 && Pos_dot_estim < 0)) {
-//		control_signal_Pos_dot_L *= 100;
-//		control_signal_Pos_dot_R *= 100;
-//	}
-	
-//	if ((speedY > 0 && Pitch_estim < 0 && Pos_dot_estim_L < 0 && Pos_dot_estim_R < 0) || (speedY < 0 && Pitch_estim > 0 && Pos_dot_estim_L > 0 && Pos_dot_estim_R > 0)) {
-//		control_signal_Pos_dot_L *= 1.8;
-//		control_signal_Pos_dot_R *= 1.8;
-//	}
+	control_signal_Pitch = (ref_Pitch_gyro - Pitch_gyro_estim - Tcc*a_smc_Pitch + k2*(ref_Pitch - Pitch_estim - Tcc*Pitch_gyro_estim) - smc_conv_coeff*((ref_Pitch_gyro_prev - Pitch_gyro_estim) + k2*(ref_Pitch_prev - Pitch_estim))) / (Tcc*b_smc_Pitch);
+	control_signal_Pos_dot_L = (ref_Pos_dot_L - Pos_dot_estim_L - Tcc*a_smc_Pos - smc_conv_coeff*(ref_Pos_dot_L_prev - Pos_dot_estim_L)) / (Tcc*b_smc_Pos);
+	control_signal_Pos_dot_R = (ref_Pos_dot_R - Pos_dot_estim_R - Tcc*a_smc_Pos - smc_conv_coeff*(ref_Pos_dot_R_prev - Pos_dot_estim_R)) / (Tcc*b_smc_Pos);
 	
 	//control_signal_Pitch = 0;
-//	control_signal_L = gain_2*control_signal_Pitch + gain_1*control_signal_Pos_dot_L;	//0.01
-//	control_signal_R = gain_2*control_signal_Pitch + gain_1*control_signal_Pos_dot_R;	//0.01
+	control_signal_L = gain_Pitch_to_wheels*control_signal_Pitch + gain_Pos_dot_to_wheels*control_signal_Pos_dot_L;
+	control_signal_R = gain_Pitch_to_wheels*control_signal_Pitch + gain_Pos_dot_to_wheels*control_signal_Pos_dot_R;
 	
-//	control_signal_L *= 25;		//35
-//	control_signal_R *= 25;		//35
-	
-	if (speedY == 0 && rad == 0) {
-		control_signal_L *= 1.3;	//1.3
-		control_signal_R *= 1.3;	//1.3
-	}
-	
-	speedL = control_signal_L;
-	speedR = - control_signal_R;
-
-	CMControlOut(speedL+rad*2,speedR+rad*2,0,0);
-	//CAN1_Send_Bottom(speedL,speedR,0,0); //to send the control signals directly to the wheels motors
-	
-	
-	//update of the references for next iteration of the controller
-	ref_Pos_dot_L_prev = ref_Pos_dot_L_succ;
-	ref_Pos_dot_R_prev = ref_Pos_dot_R_succ;
-	ref_Pitch_prev = ref_Pitch_succ;
-	ref_Pitch_gyro_prev = ref_Pitch_gyro_succ;
 }
 
-
-/***************************************************************************************
-*Name     	: kalman_filter_update
-*Function 	: estimates the angular position and velocity of the robot by its inputs and outputs
-*Input    	: u (input to the robot at time k-1), y3 (robot's pitch position at time k), y4 (robot's pitch velocity at time k)
-*Output   	: none (the function just updates the values of Pitch_estim and Pitch_gyro_estim, which are estimations of pitch position and velocity of the robot, respectively)
-*Description: it implements a state-of-the-art algorithm to solve iteratively the Riccatti equation, hence to compute Kf (the Kalman Filter gain matrix) and to estimate the robot's state
-****************************************************************************************/
-//void kalman_filter_update(int16_t u, float y3, float y4)
-//{
-//	
-//	/*Step 1: Prediction*/
-//	// state prediction: x_pred(k) = A*x_estim(k-1) + B*u(k-1)
-////	Pitch_pred = (A33*Pitch_estim + A34*Pitch_gyro_estim) + (B3*u);
-////	Pitch_gyro_pred = (A43*Pitch_estim + A44*Pitch_gyro_estim) + (B4*u);
-//	Pos_dot_pred = (A22*Pos_dot_estim + A23*Pitch_estim + A24*Pitch_gyro_estim) + (B2*u);
-//	Pitch_pred = (A32*Pos_dot_estim + A33*Pitch_estim + A34*Pitch_gyro_estim) + (B3*u);
-//	Pitch_gyro_pred = (A42*Pos_dot_estim + A43*Pitch_estim + A44*Pitch_gyro_estim) + (B4*u);
-//	Pitch_gyro_pred = Pitch_gyro_pred*0.0001;
-//	
-//	//Taylor series of consine and sine of the previously estimated robot's angular position
-////	cos_theta = 1 - (Pitch_estim*Pitch_estim)/2 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/24 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/720;
-////	sin_theta = Pitch_estim - (Pitch_estim*Pitch_estim*Pitch_estim)/6 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/120 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/5040;
-////  cos_theta = cos(Pitch_estim);
-////  sin_theta = sin(Pitch_estim);
-////	Pitch_pred = Pitch_estim + Tcc*Pitch_gyro_estim;
-////	Pos_dot_pred = Pos_dot_estim + Tcc*(-b*(I+m_top*l*l)*Pos_dot_estim + m_top*m_top*l*l*g*cos_theta*sin_theta - m_top*l*(I+m_top*l*l)*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta + (2/r)*u) / ((I+m_top*l*l)*(M_bottom+m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
-////	Pitch_gyro_pred = Pitch_gyro_estim + Tcc*((m_top*l*g*sin_theta)/(I+m_top*l*l) + ((m_top*l*cos_theta)*(-b*Pos_dot_estim - m_top*l*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta))/((I+m_top*l*l)*(M_bottom+m_top)) + ((2*m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)*r))*u) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
-//	
-//	
-//	
-//	// compute the matrix A*P(k-1)*A^(T) and store it in the matrix 'tmp'
-////	tmp33 = A33*P33 + A34*P43;
-////	tmp34 = A33*P34 + A34*P44;
-////	tmp43 = A43*P33 + A44*P43;
-////	tmp44 = A43*P34 + A44*P44;
-//	tmp22 = A22*P22 + A23*P32 + A24*P42;
-//	tmp23 = A22*P23 + A23*P33 + A24*P43;
-//	tmp24 = A22*P24 + A23*P34 + A24*P44;
-//	tmp32 = A32*P22 + A33*P32 + A34*P42;
-//	tmp33 = A32*P23 + A33*P33 + A34*P43;
-//	tmp34 = A32*P24 + A33*P34 + A34*P44;
-//	tmp42 = A42*P22 + A43*P32 + A44*P42;
-//	tmp43 = A42*P23 + A43*P33 + A44*P43;
-//	tmp44 = A42*P24 + A43*P34 + A44*P44;
-//	// now 'tmp' stores the matrix A*P(k-1), so we can compute tmp*A^(T)
-////	APA33 = tmp33*A33 + tmp34*A34;
-////	APA34 = tmp33*A43 + tmp34*A44;
-////	APA43 = tmp43*A33 + tmp44*A34;
-////	APA44 = tmp43*A43 + tmp44*A44;
-//	APA22 = tmp22*A22 + tmp23*A23 + tmp24*A24;
-//	APA23 = tmp22*A32 + tmp23*A33 + tmp24*A34;
-//	APA24 = tmp22*A42 + tmp23*A43 + tmp24*A44;
-//	APA32 = tmp32*A22 + tmp33*A23 + tmp34*A24;
-//	APA33 = tmp32*A32 + tmp33*A33 + tmp34*A34;
-//	APA34 = tmp32*A42 + tmp33*A43 + tmp34*A44;
-//	APA42 = tmp42*A22 + tmp43*A23 + tmp44*A24;
-//	APA43 = tmp42*A32 + tmp43*A33 + tmp44*A34;
-//	APA44 = tmp42*A42 + tmp43*A43 + tmp44*A44;
-//	
-//	// forecast error covariance: P_pred(k) = A*P(k-1)*A^(T) + Vd
-////	P_pred33 = APA33 + Vd33;
-////	P_pred34 = APA34 + Vd34;
-////	P_pred43 = APA43 + Vd43;
-////	P_pred44 = APA44 + Vd44;
-//	P_pred22 = APA22 + Vd22;
-//	P_pred23 = APA23 + Vd23;
-//	P_pred24 = APA24 + Vd24;
-//	P_pred32 = APA32 + Vd32;
-//	P_pred33 = APA33 + Vd33;
-//	P_pred34 = APA34 + Vd34;
-//	P_pred42 = APA42 + Vd42;
-//	P_pred43 = APA43 + Vd43;
-//	P_pred44 = APA44 + Vd44;
-//	
-//	/*Step 2: Update predictions*/
-//	// compute the matrix C*P_pred(k)*C^(T) and store it in the matrix 'tmp'
-////	tmp33 = P_pred33*C33 + P_pred34*C34;
-////	tmp34 = P_pred33*C43 + P_pred34*C44;
-////	tmp43 = P_pred43*C33 + P_pred44*C34;
-////	tmp44 = P_pred43*C43 + P_pred44*C44;
-//	tmp23 = P_pred22*C32 + P_pred23*C33 + P_pred24*C34;
-//	tmp24 = P_pred22*C42 + P_pred23*C43 + P_pred24*C44;
-//	tmp33 = P_pred32*C32 + P_pred33*C33 + P_pred34*C34;
-//	tmp34 = P_pred32*C42 + P_pred33*C43 + P_pred34*C44;
-//	tmp43 = P_pred42*C32 + P_pred43*C33 + P_pred44*C34;
-//	tmp44 = P_pred42*C42 + P_pred43*C43 + P_pred44*C44;
-//	// now 'tmp' stores the matrix P_pred(k)*C^(T), and we can compute C*tmp
-////	CPC33 = C33*tmp33 + C34*tmp43;
-////	CPC34 = C33*tmp34 + C34*tmp44;
-////	CPC43 = C43*tmp33 + C44*tmp43;
-////	CPC44 = C43*tmp34 + C44*tmp44;
-//	CPC33 = C32*tmp23 + C33*tmp33 + C34*tmp43;
-//	CPC34 = C32*tmp24 + C33*tmp34 + C34*tmp44;
-//	CPC43 = C42*tmp23 + C43*tmp33 + C44*tmp43;
-//	CPC44 = C42*tmp24 + C43*tmp34 + C44*tmp44;
-//	
-//	// innovation covariance matrix: S(k) = C*P_pred(k)*C^(T) + Vn
-//	S33 = CPC33 + Vn33;
-//	S34 = CPC34 + Vn34;
-//	S43 = CPC43 + Vn43;
-//	S44 = CPC44 + Vn44;
-//	
-//	// compute the inverse of the 2x2 innovation matrix S(k)^(-1)
-//	S_det = S33*S44 - S34*S43;
-//	S_inv33 = S44/S_det;
-//	S_inv34 = -S34/S_det;
-//	S_inv43 = -S43/S_det;
-//	S_inv44 = S33/S_det;
-//	
-//	// compute Kalman Filter gain matrix: Kf(k) = P_pred(k)*C^(T)*S(k)^(-1)
-////	Kf33 = tmp33*S_inv33 + tmp34*S_inv43;
-////	Kf34 = tmp33*S_inv34 + tmp34*S_inv44;
-////	Kf43 = tmp43*S_inv33 + tmp44*S_inv43;
-////	Kf44 = tmp43*S_inv34 + tmp44*S_inv44;
-//	Kf23 = tmp23*S_inv33 + tmp24*S_inv43;
-//	Kf24 = tmp23*S_inv34 + tmp24*S_inv44;
-//	Kf33 = tmp33*S_inv33 + tmp34*S_inv43;
-//	Kf34 = tmp33*S_inv34 + tmp34*S_inv44;
-//	Kf43 = tmp43*S_inv33 + tmp44*S_inv43;
-//	Kf44 = tmp43*S_inv34 + tmp44*S_inv44;
-//	
-//	// error between prediction's output and actual output: delta_y(k) = y(k) - C*x_pred(k)
-//	delta_y3 = y3 - (C32*Pos_dot_pred + C33*Pitch_pred + C34*Pitch_gyro_pred);
-//	delta_y4 = y4 - (C42*Pos_dot_pred + C43*Pitch_pred + C44*Pitch_gyro_pred);
-//	
-//	// state estimation by means of 'a posteriori' correction of the state prediction: x_estim(k) = x_pred(k) + Kf*delta_y(k)
-////	Pitch_estim = Pitch_pred + (Kf33*delta_y3 + Kf34*delta_y4);
-////	Pitch_estim = Pitch_estim*10;
-////	Pitch_gyro_estim = Pitch_gyro_pred + (Kf43*delta_y3 + Kf44*delta_y4);
-//	Pos_dot_estim = Pos_dot_pred + (Kf23*delta_y3 + Kf24*delta_y4);
-//	Pitch_estim = Pitch_pred + (Kf33*delta_y3 + Kf34*delta_y4);
-//	Pitch_gyro_estim = Pitch_gyro_pred + (Kf43*delta_y3 + Kf44*delta_y4);
-//	
-//	// compute the matrix I - Kf*C and store it in the matrix 'tmp'
-////	tmp33 = 1 - (Kf33*C33 + Kf34*C43);
-////	tmp34 = 0 - (Kf33*C34 + Kf34*C44);
-////	tmp43 = 0 - (Kf43*C33 + Kf44*C43);
-////	tmp44 = 1 - (Kf43*C34 + Kf44*C44);
-//	tmp22 = 1 - (Kf23*C32 + Kf24*C42);
-//	tmp23 = 0 - (Kf23*C33 + Kf24*C43);
-//	tmp24 = 0 - (Kf23*C34 + Kf24*C44);
-//	tmp32 = 0 - (Kf33*C32 + Kf34*C42);
-//	tmp33 = 1 - (Kf33*C33 + Kf34*C43);
-//	tmp34 = 0 - (Kf33*C34 + Kf34*C44);
-//	tmp42 = 0 - (Kf43*C32 + Kf44*C42);
-//	tmp43 = 0 - (Kf43*C33 + Kf44*C43);
-//	tmp44 = 1 - (Kf43*C34 + Kf44*C44);
-//	
-//	// error covariance matrix estimation: P(k) = (I - Kf*C)*P_pred(k)
-////	P33 = tmp33*P_pred33 + tmp34*P_pred43;
-////	P34 = tmp33*P_pred34 + tmp34*P_pred44;
-////	P43 = tmp43*P_pred33 + tmp44*P_pred43;
-////	P44 = tmp43*P_pred34 + tmp44*P_pred44;
-//	P22 = tmp22*P_pred22 + tmp23*P_pred32 + tmp24*P_pred42;
-//	P23 = tmp22*P_pred23 + tmp23*P_pred33 + tmp24*P_pred43;
-//	P24 = tmp22*P_pred24 + tmp23*P_pred34 + tmp24*P_pred44;
-//	P32 = tmp32*P_pred22 + tmp33*P_pred32 + tmp34*P_pred42;
-//	P33 = tmp32*P_pred23 + tmp33*P_pred33 + tmp34*P_pred43;
-//	P34 = tmp32*P_pred24 + tmp33*P_pred34 + tmp34*P_pred44;
-//	P42 = tmp42*P_pred22 + tmp43*P_pred32 + tmp44*P_pred42;
-//	P43 = tmp42*P_pred23 + tmp43*P_pred33 + tmp44*P_pred43;
-//	P44 = tmp42*P_pred24 + tmp43*P_pred34 + tmp44*P_pred44;
-//	
-//	
-//	// collect both pitch position/velocity measurements and estimations, so that we can graph and compare them
-////	if (i < N) {
-////		
-////		Pitch_measurements[i] = y3;
-////		Pitch_gyro_measurements[i] = y4;
-////		Pitch_estimations[i] = Pitch_estim;
-////		Pitch_gyro_estimations[i] = Pitch_gyro_estim;
-////		white_noise_input[i] = u;
-////		
-////		if (i == N-1) {
-////			//save the arrays in separated files
-////			
-////			char *separator = "----------";
-////			u8 *separator_u8 = (u8 *) separator;
-////			
-////			/*
-////			u8 Pitch_measurements_u8[4000];
-////			unsigned int jj = 0;
-////			for(unsigned int j=0; j<1000; j++) {
-////				int32_t tmp = (int32_t) Pitch_measurements[j]*10000000000;	//convert the first 10 fractional digits into integer digits, and then convert the number to int
-////				Pitch_measurements_u8[jj] = tmp >> 24;
-////				jj++;
-////				Pitch_measurements_u8[jj] = tmp >> 16;
-////				jj++;
-////				Pitch_measurements_u8[jj] = tmp >> 8;
-////				jj++;
-////				Pitch_measurements_u8[jj] = tmp;
-////				jj++;
-////			}
-////			*/
-////			
-////			u8 Pitch_measurements_u8[4000];
-////			
-////			for(unsigned int j=0; j<1000; j++) {
-////				unsigned long longdata = 0;
-////				longdata = *(unsigned long*)&Pitch_measurements[j];
-////				Pitch_measurements_u8[4*j] = (longdata & 0xFF000000) >> 24;
-////				Pitch_measurements_u8[4*j+1] = (longdata & 0x00FF0000) >> 16;
-////				Pitch_measurements_u8[4*j+2] = (longdata & 0x0000FF00) >> 8;
-////				Pitch_measurements_u8[4*j+3] = (longdata & 0x000000FF);
-////			}
-////			
-////			for (unsigned int j=0; j<20; j++) {
-////				UART3_Send(Pitch_measurements_u8+j*200, 200);
-////			}
-////			UART3_Send(separator_u8, 10);
-////			
-////		}
-////		
-////		i++;
-////	}
-//}
 
 
 /***************************************************************************************
@@ -1030,178 +675,520 @@ void sliding_mode_controller(int16_t speedY, int16_t rad,int16_t balance){
 *Output   	: none (the function just updates the values of Pitch_estim and Pitch_gyro_estim, which are estimations of pitch position and velocity of the robot, respectively)
 *Description: it implements a state-of-the-art algorithm to solve iteratively the Riccatti equation, hence to compute Kf (the Kalman Filter gain matrix) and to estimate the robot's state
 ****************************************************************************************/
-void kalman_filter_nonlinear_update(int16_t u, float y1, float y3)
+void kalman_filter_nonlinear_update(int16_t u, float y1, float y2, float y3, float y4, float *y1_estim, float *y2_estim, float *y3_estim, float *y4_estim)
 {
 	
-	//NOTE: we assume that the states observed are Pos and Pitch
+	// measurements
+	y[0] = y1;		//Pos
+	y[1] = y2;		//Pos_dot
+	y[2] = y3;		//Pitch
+	y[3] = y4;		//Pitch_gyro
 	
-	//Taylor series of consine and sine of the previously estimated robot's angular position
-//	cos_theta = 1 - (Pitch_estim*Pitch_estim)/2 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/24 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/720;
-//	sin_theta = Pitch_estim - (Pitch_estim*Pitch_estim*Pitch_estim)/6 + (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/120 - (Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim*Pitch_estim)/5040;
-  cos_theta = cos(Pitch_estim);
+	// estimations computed in the previous iteration of the Kalman Filter
+	Pos_estim = *y1_estim;
+	Pos_dot_estim = *y2_estim;
+	Pitch_estim = *y3_estim;
+	Pitch_gyro_estim = *y4_estim;
+	
+	int i, j;
+	cos_theta = cos(Pitch_estim);
   sin_theta = sin(Pitch_estim);
 	
 	/*Step 1: Prediction*/
 	// state prediction: x_pred(k) = A*x_estim(k-1) + B*u(k-1)
 	
 	Pos_pred = Pos_estim + Tcc*Pos_dot_estim;
-	Pos_dot_pred = Pos_dot_estim - Tcc*(-b*(I+m_top*l*l)*Pos_dot_estim + m_top*m_top*l*l*g*cos_theta*sin_theta - m_top*l*(I+m_top*l*l)*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta + (2/r)*u) / ((I+m_top*l*l)*(M_bottom+m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
+	Pos_dot_pred = Pos_dot_estim + Tcc*(-b*(I+m_top*l*l)*Pos_dot_estim + m_top*m_top*l*l*g*cos_theta*sin_theta - m_top*l*(I+m_top*l*l)*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta + (2/r)*u) / ((I+m_top*l*l)*(M_bottom+m_top) - (m_top*l*cos_theta)*(m_top*l*cos_theta));
 	Pitch_pred = Pitch_estim + Tcc*Pitch_gyro_estim;
 	Pitch_gyro_pred = Pitch_gyro_estim + Tcc*((m_top*l*g*sin_theta)/(I+m_top*l*l) + ((m_top*l*cos_theta)*(-b*Pos_dot_estim - m_top*l*Pitch_gyro_estim*Pitch_gyro_estim*sin_theta))/((I+m_top*l*l)*(M_bottom+m_top)) + ((2*m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)*r))*u) / (1 - (m_top*l*cos_theta)*(m_top*l*cos_theta)/((I+m_top*l*l)*(M_bottom+m_top)));
-	Pitch_gyro_pred = Pitch_gyro_pred*0.0001;
+	//Pitch_gyro_pred = Pitch_gyro_pred*0.0001;
+	
+	state_pred[0] = Pos_pred;
+	state_pred[1] = Pos_dot_pred;
+	state_pred[2] = Pitch_pred;
+	state_pred[3] = Pitch_gyro_pred;
 	
 	
 	// compute the matrix A*P(k-1)*A^(T) and store it in the matrix 'tmp'
-	tmp11 = A11*P11 + A12*P21 + A13*P31 + A14*P41;
-	tmp12 = A11*P12 + A12*P22 + A13*P32 + A14*P42;
-	tmp13 = A11*P13 + A12*P23 + A13*P33 + A14*P43;
-	tmp14 = A11*P14 + A12*P24 + A13*P34 + A14*P44;
-	tmp21 = A21*P11 + A22*P21 + A23*P31 + A24*P41;
-	tmp22 = A21*P12 + A22*P22 + A23*P32 + A24*P42;
-	tmp23 = A21*P13 + A22*P23 + A23*P33 + A24*P43;
-	tmp24 = A21*P14 + A22*P24 + A23*P34 + A24*P44;
-	tmp31 = A31*P11 + A32*P21 + A33*P31 + A34*P41;
-	tmp32 = A31*P12 + A32*P22 + A33*P32 + A34*P42;
-	tmp33 = A31*P13 + A32*P23 + A33*P33 + A34*P43;
-	tmp34 = A31*P14 + A32*P24 + A33*P34 + A34*P44;
-	tmp41 = A41*P11 + A42*P21 + A43*P31 + A44*P41;
-	tmp42 = A41*P12 + A42*P22 + A43*P32 + A44*P42;
-	tmp43 = A41*P13 + A42*P23 + A43*P33 + A44*P43;
-	tmp44 = A41*P14 + A42*P24 + A43*P34 + A44*P44;
+//	tmp11 = A11*P11 + A12*P21 + A13*P31 + A14*P41;
+//	tmp12 = A11*P12 + A12*P22 + A13*P32 + A14*P42;
+//	tmp13 = A11*P13 + A12*P23 + A13*P33 + A14*P43;
+//	tmp14 = A11*P14 + A12*P24 + A13*P34 + A14*P44;
+//	tmp21 = A21*P11 + A22*P21 + A23*P31 + A24*P41;
+//	tmp22 = A21*P12 + A22*P22 + A23*P32 + A24*P42;
+//	tmp23 = A21*P13 + A22*P23 + A23*P33 + A24*P43;
+//	tmp24 = A21*P14 + A22*P24 + A23*P34 + A24*P44;
+//	tmp31 = A31*P11 + A32*P21 + A33*P31 + A34*P41;
+//	tmp32 = A31*P12 + A32*P22 + A33*P32 + A34*P42;
+//	tmp33 = A31*P13 + A32*P23 + A33*P33 + A34*P43;
+//	tmp34 = A31*P14 + A32*P24 + A33*P34 + A34*P44;
+//	tmp41 = A41*P11 + A42*P21 + A43*P31 + A44*P41;
+//	tmp42 = A41*P12 + A42*P22 + A43*P32 + A44*P42;
+//	tmp43 = A41*P13 + A42*P23 + A43*P33 + A44*P43;
+//	tmp44 = A41*P14 + A42*P24 + A43*P34 + A44*P44;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			tmp[i][j] = A[i][0]*P[0][j] + A[i][1]*P[1][j] + A[i][2]*P[2][j] + A[i][3]*P[3][j];
+		}
+	}
+	
 	// now 'tmp' stores the matrix A*P(k-1), so we can compute tmp*A^(T)
-	APA11 = tmp11*A11 + tmp12*A12 + tmp13*A13 + tmp14*A14;
-	APA12 = tmp11*A21 + tmp12*A22 + tmp13*A23 + tmp14*A24;
-	APA13 = tmp11*A31 + tmp12*A32 + tmp13*A33 + tmp14*A34;
-	APA14 = tmp11*A41 + tmp12*A42 + tmp13*A43 + tmp14*A44;
-	APA21 = tmp21*A11 + tmp22*A12 + tmp23*A13 + tmp24*A14;
-	APA22 = tmp21*A21 + tmp22*A22 + tmp23*A23 + tmp24*A24;
-	APA23 = tmp21*A31 + tmp22*A32 + tmp23*A33 + tmp24*A34;
-	APA24 = tmp21*A41 + tmp22*A42 + tmp23*A43 + tmp24*A44;
-	APA31 = tmp31*A11 + tmp32*A12 + tmp33*A13 + tmp34*A14;
-	APA32 = tmp31*A21 + tmp32*A22 + tmp33*A23 + tmp34*A24;
-	APA33 = tmp31*A31 + tmp32*A32 + tmp33*A33 + tmp34*A34;
-	APA34 = tmp31*A41 + tmp32*A42 + tmp33*A43 + tmp34*A44;
-	APA41 = tmp41*A11 + tmp42*A12 + tmp43*A13 + tmp44*A14;
-	APA42 = tmp41*A21 + tmp42*A22 + tmp43*A23 + tmp44*A24;
-	APA43 = tmp41*A31 + tmp42*A32 + tmp43*A33 + tmp44*A34;
-	APA44 = tmp41*A41 + tmp42*A42 + tmp43*A43 + tmp44*A44;
+//	APA11 = tmp11*A11 + tmp12*A12 + tmp13*A13 + tmp14*A14;
+//	APA12 = tmp11*A21 + tmp12*A22 + tmp13*A23 + tmp14*A24;
+//	APA13 = tmp11*A31 + tmp12*A32 + tmp13*A33 + tmp14*A34;
+//	APA14 = tmp11*A41 + tmp12*A42 + tmp13*A43 + tmp14*A44;
+//	APA21 = tmp21*A11 + tmp22*A12 + tmp23*A13 + tmp24*A14;
+//	APA22 = tmp21*A21 + tmp22*A22 + tmp23*A23 + tmp24*A24;
+//	APA23 = tmp21*A31 + tmp22*A32 + tmp23*A33 + tmp24*A34;
+//	APA24 = tmp21*A41 + tmp22*A42 + tmp23*A43 + tmp24*A44;
+//	APA31 = tmp31*A11 + tmp32*A12 + tmp33*A13 + tmp34*A14;
+//	APA32 = tmp31*A21 + tmp32*A22 + tmp33*A23 + tmp34*A24;
+//	APA33 = tmp31*A31 + tmp32*A32 + tmp33*A33 + tmp34*A34;
+//	APA34 = tmp31*A41 + tmp32*A42 + tmp33*A43 + tmp34*A44;
+//	APA41 = tmp41*A11 + tmp42*A12 + tmp43*A13 + tmp44*A14;
+//	APA42 = tmp41*A21 + tmp42*A22 + tmp43*A23 + tmp44*A24;
+//	APA43 = tmp41*A31 + tmp42*A32 + tmp43*A33 + tmp44*A34;
+//	APA44 = tmp41*A41 + tmp42*A42 + tmp43*A43 + tmp44*A44;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			APA[i][j] = tmp[i][0]*A[j][0] + tmp[i][1]*A[j][1] + tmp[i][2]*A[j][2] + tmp[i][3]*A[j][3];
+		}
+	}
 
 	// forecast error covariance: P_pred(k) = A*P(k-1)*A^(T) + Vd
-	P_pred11 = APA11 + Vd11;
-	P_pred12 = APA12 + Vd12;
-	P_pred13 = APA13 + Vd13;
-	P_pred14 = APA14 + Vd14;
-	P_pred21 = APA21 + Vd21;
-	P_pred22 = APA22 + Vd22;
-	P_pred23 = APA23 + Vd23;
-	P_pred24 = APA24 + Vd24;
-	P_pred31 = APA31 + Vd31;
-	P_pred32 = APA32 + Vd32;
-	P_pred33 = APA33 + Vd33;
-	P_pred34 = APA34 + Vd34;
-	P_pred41 = APA41 + Vd41;
-	P_pred42 = APA42 + Vd42;
-	P_pred43 = APA43 + Vd43;
-	P_pred44 = APA44 + Vd44;
+//	P_pred11 = APA11 + Vd11;
+//	P_pred12 = APA12 + Vd12;
+//	P_pred13 = APA13 + Vd13;
+//	P_pred14 = APA14 + Vd14;
+//	P_pred21 = APA21 + Vd21;
+//	P_pred22 = APA22 + Vd22;
+//	P_pred23 = APA23 + Vd23;
+//	P_pred24 = APA24 + Vd24;
+//	P_pred31 = APA31 + Vd31;
+//	P_pred32 = APA32 + Vd32;
+//	P_pred33 = APA33 + Vd33;
+//	P_pred34 = APA34 + Vd34;
+//	P_pred41 = APA41 + Vd41;
+//	P_pred42 = APA42 + Vd42;
+//	P_pred43 = APA43 + Vd43;
+//	P_pred44 = APA44 + Vd44;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			P_pred[i][j] = APA[i][j] + Vd[i][j];
+		}
+	}
 	
 	/*Step 2: Update predictions*/
 	// compute the matrix C*P_pred(k)*C^(T) and store it in the matrix 'tmp'
-	tmp11 = P_pred11*C11 + P_pred12*C12 + P_pred13*C13 + P_pred14*C14;
-	tmp13 = P_pred11*C31 + P_pred12*C32 + P_pred13*C33 + P_pred14*C34;
-	tmp21 = P_pred21*C11 + P_pred22*C12 + P_pred23*C13 + P_pred24*C14;
-	tmp23 = P_pred21*C31 + P_pred22*C32 + P_pred23*C33 + P_pred24*C34;
-	tmp31 = P_pred31*C11 + P_pred32*C12 + P_pred33*C13 + P_pred34*C14;
-	tmp33 = P_pred31*C31 + P_pred32*C32 + P_pred33*C33 + P_pred34*C34;
-	tmp41 = P_pred41*C11 + P_pred42*C12 + P_pred43*C13 + P_pred44*C14;
-	tmp43 = P_pred41*C31 + P_pred42*C32 + P_pred43*C33 + P_pred44*C34;
+//	tmp11 = P_pred11*C11 + P_pred12*C12 + P_pred13*C13 + P_pred14*C14;
+//	tmp13 = P_pred11*C31 + P_pred12*C32 + P_pred13*C33 + P_pred14*C34;
+//	tmp21 = P_pred21*C11 + P_pred22*C12 + P_pred23*C13 + P_pred24*C14;
+//	tmp23 = P_pred21*C31 + P_pred22*C32 + P_pred23*C33 + P_pred24*C34;
+//	tmp31 = P_pred31*C11 + P_pred32*C12 + P_pred33*C13 + P_pred34*C14;
+//	tmp33 = P_pred31*C31 + P_pred32*C32 + P_pred33*C33 + P_pred34*C34;
+//	tmp41 = P_pred41*C11 + P_pred42*C12 + P_pred43*C13 + P_pred44*C14;
+//	tmp43 = P_pred41*C31 + P_pred42*C32 + P_pred43*C33 + P_pred44*C34;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {			
+			tmp[i][j] = P_pred[i][0]*C[j][0] + P_pred[i][1]*C[j][1] + P_pred[i][2]*C[j][2] + P_pred[i][3]*C[j][3];
+		}
+	}
 	// now 'tmp' stores the matrix P_pred(k)*C^(T), and we can compute C*tmp
-	CPC11 = C11*tmp11 + C12*tmp21 + C13*tmp31 + C14*tmp41;
-	CPC13 = C11*tmp13 + C12*tmp23 + C13*tmp33 + C14*tmp43;
-	CPC31 = C31*tmp11 + C32*tmp21 + C33*tmp31 + C34*tmp41;
-	CPC33 = C31*tmp13 + C32*tmp23 + C33*tmp33 + C34*tmp43;
+//	CPC11 = C11*tmp11 + C12*tmp21 + C13*tmp31 + C14*tmp41;
+//	CPC13 = C11*tmp13 + C12*tmp23 + C13*tmp33 + C14*tmp43;
+//	CPC31 = C31*tmp11 + C32*tmp21 + C33*tmp31 + C34*tmp41;
+//	CPC33 = C31*tmp13 + C32*tmp23 + C33*tmp33 + C34*tmp43;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			CPC[i][j] = C[i][0]*tmp[0][j] + C[i][1]*tmp[1][j] + C[i][2]*tmp[2][j] + C[i][3]*tmp[3][j];
+		}
+	}
 	
 	// innovation covariance matrix: S(k) = C*P_pred(k)*C^(T) + Vn
-	S11 = CPC11 + Vn11;
-	S13 = CPC13 + Vn13;
-	S31 = CPC31 + Vn31;
-	S33 = CPC33 + Vn33;
+//	S11 = CPC11 + Vn11;
+//	S13 = CPC13 + Vn13;
+//	S31 = CPC31 + Vn31;
+//	S33 = CPC33 + Vn33;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			S[i][j] = CPC[i][j] + Vn[i][j];
+		}
+	}
 	
 	// compute the inverse of the 2x2 innovation matrix S(k)^(-1)
-	S_det = S11*S33 - S13*S31;
-	S_inv11 = S33/S_det;
-	S_inv13 = -S13/S_det;
-	S_inv31 = -S31/S_det;
-	S_inv33 = S11/S_det;
+//	S_det = S11*S33 - S13*S31;
+//	S_inv11 = S33/S_det;
+//	S_inv13 = -S13/S_det;
+//	S_inv31 = -S31/S_det;
+//	S_inv33 = S11/S_det;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			S_array_format[i*4+j] = S[i][j];
+		}
+	}
+	if (matrix_4x4_inverse(S_array_format, S_inv_array_format) == 0) return;		//if det(S)==0, then S cannot be inverted, hence we return
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			S_inv[i][j] = S_inv_array_format[i*4+j];
+		}
+	}
 	
 	// compute Kalman Filter gain matrix: Kf(k) = P_pred(k)*C^(T)*S(k)^(-1)
-	Kf11 = tmp11*S_inv11 + tmp13*S_inv31;
-	Kf13 = tmp11*S_inv13 + tmp13*S_inv33;
-	Kf21 = tmp21*S_inv11 + tmp23*S_inv31;
-	Kf23 = tmp21*S_inv13 + tmp23*S_inv33;
-	Kf31 = tmp31*S_inv11 + tmp33*S_inv31;
-	Kf33 = tmp31*S_inv13 + tmp33*S_inv33;
-	Kf41 = tmp41*S_inv11 + tmp43*S_inv31;
-	Kf43 = tmp41*S_inv13 + tmp43*S_inv33;
+//	Kf11 = tmp11*S_inv11 + tmp13*S_inv31;
+//	Kf13 = tmp11*S_inv13 + tmp13*S_inv33;
+//	Kf21 = tmp21*S_inv11 + tmp23*S_inv31;
+//	Kf23 = tmp21*S_inv13 + tmp23*S_inv33;
+//	Kf31 = tmp31*S_inv11 + tmp33*S_inv31;
+//	Kf33 = tmp31*S_inv13 + tmp33*S_inv33;
+//	Kf41 = tmp41*S_inv11 + tmp43*S_inv31;
+//	Kf43 = tmp41*S_inv13 + tmp43*S_inv33;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			Kf[i][j] = tmp[i][0]*S_inv[0][j] + tmp[i][1]*S_inv[1][j] + tmp[i][2]*S_inv[2][j] + tmp[i][3]*S_inv[3][j];
+		}
+	}
 	
 	// error between prediction's output and actual output: delta_y(k) = y(k) - C*x_pred(k)
-	delta_y1 = y1 - (C11*Pos_pred + C12*Pos_dot_pred + C13*Pitch_pred + C14*Pitch_gyro_pred);
-	delta_y3 = y3 - (C31*Pos_pred + C32*Pos_dot_pred + C33*Pitch_pred + C34*Pitch_gyro_pred);
+//	delta_y1 = y1 - (C11*Pos_pred + C12*Pos_dot_pred + C13*Pitch_pred + C14*Pitch_gyro_pred);
+//	delta_y3 = y3 - (C31*Pos_pred + C32*Pos_dot_pred + C33*Pitch_pred + C34*Pitch_gyro_pred);
+	for (i = 0; i < 4; i++) {
+			delta_y[i] = y[i] - (C[i][0]*state_pred[i] + C[i][1]*state_pred[i] + C[i][2]*state_pred[i] + C[i][3]*state_pred[i]);
+	}
 	
 	// state estimation by means of 'a posteriori' correction of the state prediction: x_estim(k) = x_pred(k) + Kf*delta_y(k)
-	Pos_estim = Pos_pred + (Kf11*delta_y1 + Kf13*delta_y3);
-	Pos_dot_estim = Pos_dot_pred + (Kf21*delta_y1 + Kf23*delta_y3);
-	Pitch_estim = Pitch_pred + (Kf31*delta_y1 + Kf33*delta_y3);
-	Pitch_gyro_estim = Pitch_gyro_pred + (Kf41*delta_y1 + Kf43*delta_y3);
+//	Pos_estim = Pos_pred + (Kf11*delta_y1 + Kf13*delta_y3);
+//	Pos_dot_estim = Pos_dot_pred + (Kf21*delta_y1 + Kf23*delta_y3);
+//	Pitch_estim = Pitch_pred + (Kf31*delta_y1 + Kf33*delta_y3);
+//	Pitch_gyro_estim = Pitch_gyro_pred + (Kf41*delta_y1 + Kf43*delta_y3);
+	for (i = 0; i < 4; i++) {
+			state_estim[i] = state_pred[i] + (Kf[i][0]*delta_y[i] + Kf[i][1]*delta_y[i] + Kf[i][2]*delta_y[i] + Kf[i][3]*delta_y[i]);
+	}
+	
+	*y1_estim = state_estim[0];
+	*y2_estim = state_estim[1];
+	*y3_estim = state_estim[2];
+	*y4_estim = state_estim[3];
+	
 	
 	// compute the matrix I - Kf*C and store it in the matrix 'tmp'
-	tmp11 = 1 - (Kf11*C11 + Kf13*C31);
-	tmp12 = 0 - (Kf11*C12 + Kf13*C32);
-	tmp13 = 0 - (Kf11*C13 + Kf13*C33);
-	tmp14 = 0 - (Kf11*C14 + Kf13*C34);
-	tmp21 = 0 - (Kf21*C11 + Kf23*C31);
-	tmp22 = 1 - (Kf21*C12 + Kf23*C32);
-	tmp23 = 0 - (Kf21*C13 + Kf23*C33);
-	tmp24 = 0 - (Kf21*C14 + Kf23*C34);
-	tmp31 = 0 - (Kf31*C11 + Kf33*C31);
-	tmp32 = 0 - (Kf31*C12 + Kf33*C32);
-	tmp33 = 1 - (Kf31*C13 + Kf33*C33);
-	tmp34 = 0 - (Kf31*C14 + Kf33*C34);
-	tmp41 = 0 - (Kf41*C11 + Kf43*C31);
-	tmp42 = 0 - (Kf41*C12 + Kf43*C32);
-	tmp43 = 0 - (Kf41*C13 + Kf43*C33);
-	tmp44 = 1 - (Kf41*C14 + Kf43*C34);
+//	tmp11 = 1 - (Kf11*C11 + Kf13*C31);
+//	tmp12 = 0 - (Kf11*C12 + Kf13*C32);
+//	tmp13 = 0 - (Kf11*C13 + Kf13*C33);
+//	tmp14 = 0 - (Kf11*C14 + Kf13*C34);
+//	tmp21 = 0 - (Kf21*C11 + Kf23*C31);
+//	tmp22 = 1 - (Kf21*C12 + Kf23*C32);
+//	tmp23 = 0 - (Kf21*C13 + Kf23*C33);
+//	tmp24 = 0 - (Kf21*C14 + Kf23*C34);
+//	tmp31 = 0 - (Kf31*C11 + Kf33*C31);
+//	tmp32 = 0 - (Kf31*C12 + Kf33*C32);
+//	tmp33 = 1 - (Kf31*C13 + Kf33*C33);
+//	tmp34 = 0 - (Kf31*C14 + Kf33*C34);
+//	tmp41 = 0 - (Kf41*C11 + Kf43*C31);
+//	tmp42 = 0 - (Kf41*C12 + Kf43*C32);
+//	tmp43 = 0 - (Kf41*C13 + Kf43*C33);
+//	tmp44 = 1 - (Kf41*C14 + Kf43*C34);
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			tmp[i][j] = IdentityMatrix[i][j] - (Kf[i][0]*C[0][j] + Kf[i][1]*C[1][j] + Kf[i][2]*C[2][j] + Kf[i][3]*C[3][j]);
+		}
+	}
+	
 	
 	// error covariance matrix estimation: P(k) = (I - Kf*C)*P_pred(k)
-	P11 = tmp11*P_pred11 + tmp12*P_pred21 + tmp13*P_pred31 + tmp14*P_pred41;
-	P12 = tmp11*P_pred12 + tmp12*P_pred22 + tmp13*P_pred32 + tmp14*P_pred42;
-	P13 = tmp11*P_pred13 + tmp12*P_pred23 + tmp13*P_pred33 + tmp14*P_pred43;
-	P14 = tmp11*P_pred14 + tmp12*P_pred24 + tmp13*P_pred34 + tmp14*P_pred44;
-	P21 = tmp21*P_pred11 + tmp22*P_pred21 + tmp23*P_pred31 + tmp24*P_pred41;
-	P22 = tmp21*P_pred12 + tmp22*P_pred22 + tmp23*P_pred32 + tmp24*P_pred42;
-	P23 = tmp21*P_pred13 + tmp22*P_pred23 + tmp23*P_pred33 + tmp24*P_pred43;
-	P24 = tmp21*P_pred14 + tmp22*P_pred24 + tmp23*P_pred34 + tmp24*P_pred44;
-	P31 = tmp31*P_pred11 + tmp32*P_pred21 + tmp33*P_pred31 + tmp34*P_pred41;
-	P32 = tmp31*P_pred12 + tmp32*P_pred22 + tmp33*P_pred32 + tmp34*P_pred42;
-	P33 = tmp31*P_pred13 + tmp32*P_pred23 + tmp33*P_pred33 + tmp34*P_pred43;
-	P34 = tmp31*P_pred14 + tmp32*P_pred24 + tmp33*P_pred34 + tmp34*P_pred44;
-	P41 = tmp41*P_pred11 + tmp42*P_pred21 + tmp43*P_pred31 + tmp44*P_pred41;
-	P42 = tmp41*P_pred12 + tmp42*P_pred22 + tmp43*P_pred32 + tmp44*P_pred42;
-	P43 = tmp41*P_pred13 + tmp42*P_pred23 + tmp43*P_pred33 + tmp44*P_pred43;
-	P44 = tmp41*P_pred14 + tmp42*P_pred24 + tmp43*P_pred34 + tmp44*P_pred44;
-	
-	kalman_filter_results[0] = Pos_estim;
-	kalman_filter_results[1] = Pos_dot_estim;
-	kalman_filter_results[2] = Pitch_estim;
-	kalman_filter_results[3] = Pitch_gyro_estim;
-}	
+//	P11 = tmp11*P_pred11 + tmp12*P_pred21 + tmp13*P_pred31 + tmp14*P_pred41;
+//	P12 = tmp11*P_pred12 + tmp12*P_pred22 + tmp13*P_pred32 + tmp14*P_pred42;
+//	P13 = tmp11*P_pred13 + tmp12*P_pred23 + tmp13*P_pred33 + tmp14*P_pred43;
+//	P14 = tmp11*P_pred14 + tmp12*P_pred24 + tmp13*P_pred34 + tmp14*P_pred44;
+//	P21 = tmp21*P_pred11 + tmp22*P_pred21 + tmp23*P_pred31 + tmp24*P_pred41;
+//	P22 = tmp21*P_pred12 + tmp22*P_pred22 + tmp23*P_pred32 + tmp24*P_pred42;
+//	P23 = tmp21*P_pred13 + tmp22*P_pred23 + tmp23*P_pred33 + tmp24*P_pred43;
+//	P24 = tmp21*P_pred14 + tmp22*P_pred24 + tmp23*P_pred34 + tmp24*P_pred44;
+//	P31 = tmp31*P_pred11 + tmp32*P_pred21 + tmp33*P_pred31 + tmp34*P_pred41;
+//	P32 = tmp31*P_pred12 + tmp32*P_pred22 + tmp33*P_pred32 + tmp34*P_pred42;
+//	P33 = tmp31*P_pred13 + tmp32*P_pred23 + tmp33*P_pred33 + tmp34*P_pred43;
+//	P34 = tmp31*P_pred14 + tmp32*P_pred24 + tmp33*P_pred34 + tmp34*P_pred44;
+//	P41 = tmp41*P_pred11 + tmp42*P_pred21 + tmp43*P_pred31 + tmp44*P_pred41;
+//	P42 = tmp41*P_pred12 + tmp42*P_pred22 + tmp43*P_pred32 + tmp44*P_pred42;
+//	P43 = tmp41*P_pred13 + tmp42*P_pred23 + tmp43*P_pred33 + tmp44*P_pred43;
+//	P44 = tmp41*P_pred14 + tmp42*P_pred24 + tmp43*P_pred34 + tmp44*P_pred44;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			P[i][j] = tmp[i][0]*P_pred[0][j] + tmp[i][1]*P_pred[1][j] + tmp[i][2]*P_pred[2][j] + tmp[i][3]*P_pred[3][j];
+		}
+	}
+}
 
 
 
-float float_abs(float x) {
+float float_abs(float x) {			//computes the absolute value of a floating-point value
 	
 	if (x >= 0) return x;
 	else return -x;
 }
+
+
+int matrix_4x4_inverse(float m[16], float m_inverse[16]) {		//returns 0 if the 4x4 matrix is not invertible, otherwise returns 1
+	
+    float inv[16], det;
+    int i;
+
+    inv[0] = m[5]  * m[10] * m[15] - 
+             m[5]  * m[11] * m[14] - 
+             m[9]  * m[6]  * m[15] + 
+             m[9]  * m[7]  * m[14] +
+             m[13] * m[6]  * m[11] - 
+             m[13] * m[7]  * m[10];
+
+    inv[4] = -m[4]  * m[10] * m[15] + 
+              m[4]  * m[11] * m[14] + 
+              m[8]  * m[6]  * m[15] - 
+              m[8]  * m[7]  * m[14] - 
+              m[12] * m[6]  * m[11] + 
+              m[12] * m[7]  * m[10];
+
+    inv[8] = m[4]  * m[9] * m[15] - 
+             m[4]  * m[11] * m[13] - 
+             m[8]  * m[5] * m[15] + 
+             m[8]  * m[7] * m[13] + 
+             m[12] * m[5] * m[11] - 
+             m[12] * m[7] * m[9];
+
+    inv[12] = -m[4]  * m[9] * m[14] + 
+               m[4]  * m[10] * m[13] +
+               m[8]  * m[5] * m[14] - 
+               m[8]  * m[6] * m[13] - 
+               m[12] * m[5] * m[10] + 
+               m[12] * m[6] * m[9];
+
+    inv[1] = -m[1]  * m[10] * m[15] + 
+              m[1]  * m[11] * m[14] + 
+              m[9]  * m[2] * m[15] - 
+              m[9]  * m[3] * m[14] - 
+              m[13] * m[2] * m[11] + 
+              m[13] * m[3] * m[10];
+
+    inv[5] = m[0]  * m[10] * m[15] - 
+             m[0]  * m[11] * m[14] - 
+             m[8]  * m[2] * m[15] + 
+             m[8]  * m[3] * m[14] + 
+             m[12] * m[2] * m[11] - 
+             m[12] * m[3] * m[10];
+
+    inv[9] = -m[0]  * m[9] * m[15] + 
+              m[0]  * m[11] * m[13] + 
+              m[8]  * m[1] * m[15] - 
+              m[8]  * m[3] * m[13] - 
+              m[12] * m[1] * m[11] + 
+              m[12] * m[3] * m[9];
+
+    inv[13] = m[0]  * m[9] * m[14] - 
+              m[0]  * m[10] * m[13] - 
+              m[8]  * m[1] * m[14] + 
+              m[8]  * m[2] * m[13] + 
+              m[12] * m[1] * m[10] - 
+              m[12] * m[2] * m[9];
+
+    inv[2] = m[1]  * m[6] * m[15] - 
+             m[1]  * m[7] * m[14] - 
+             m[5]  * m[2] * m[15] + 
+             m[5]  * m[3] * m[14] + 
+             m[13] * m[2] * m[7] - 
+             m[13] * m[3] * m[6];
+
+    inv[6] = -m[0]  * m[6] * m[15] + 
+              m[0]  * m[7] * m[14] + 
+              m[4]  * m[2] * m[15] - 
+              m[4]  * m[3] * m[14] - 
+              m[12] * m[2] * m[7] + 
+              m[12] * m[3] * m[6];
+
+    inv[10] = m[0]  * m[5] * m[15] - 
+              m[0]  * m[7] * m[13] - 
+              m[4]  * m[1] * m[15] + 
+              m[4]  * m[3] * m[13] + 
+              m[12] * m[1] * m[7] - 
+              m[12] * m[3] * m[5];
+
+    inv[14] = -m[0]  * m[5] * m[14] + 
+               m[0]  * m[6] * m[13] + 
+               m[4]  * m[1] * m[14] - 
+               m[4]  * m[2] * m[13] - 
+               m[12] * m[1] * m[6] + 
+               m[12] * m[2] * m[5];
+
+    inv[3] = -m[1] * m[6] * m[11] + 
+              m[1] * m[7] * m[10] + 
+              m[5] * m[2] * m[11] - 
+              m[5] * m[3] * m[10] - 
+              m[9] * m[2] * m[7] + 
+              m[9] * m[3] * m[6];
+
+    inv[7] = m[0] * m[6] * m[11] - 
+             m[0] * m[7] * m[10] - 
+             m[4] * m[2] * m[11] + 
+             m[4] * m[3] * m[10] + 
+             m[8] * m[2] * m[7] - 
+             m[8] * m[3] * m[6];
+
+    inv[11] = -m[0] * m[5] * m[11] + 
+               m[0] * m[7] * m[9] + 
+               m[4] * m[1] * m[11] - 
+               m[4] * m[3] * m[9] - 
+               m[8] * m[1] * m[7] + 
+               m[8] * m[3] * m[5];
+
+    inv[15] = m[0] * m[5] * m[10] - 
+              m[0] * m[6] * m[9] - 
+              m[4] * m[1] * m[10] + 
+              m[4] * m[2] * m[9] + 
+              m[8] * m[1] * m[6] - 
+              m[8] * m[2] * m[5];
+
+    det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+    if (det == 0)
+        return 0;
+
+    det = 1.0 / det;
+
+    for (i = 0; i < 16; i++)
+        m_inverse[i] = inv[i] * det;
+		
+		return 1;
+}
+
+
+void system_matrices_initialization() {
+	
+	/* entries of the dynamics matrix (A) */
+	A[0][0] = 1;
+	A[0][1] = 0.0010;
+	A[0][2] = 0;
+	A[0][3] = 0;
+	A[1][0] = 0;
+	A[1][1] = 1;
+	A[1][2] = 0.0015;
+	A[1][3] = 0;
+	A[2][0] = 0;
+	A[2][1] = 0;
+	A[2][2] = 1;
+	A[2][3] = 0.0010;
+	A[3][0] = 0;
+	A[3][1] = 0;
+	A[3][2] = 0.0220;
+	A[3][3] = 1;
+
+	/* entries of the inputs matrix (B) */
+	B[0] = 0;
+	B[1] = 0.0249;
+	B[2] = 0;
+	B[3] = 0.0100;
+
+	/* entries of the outputs matrix (C) */
+	C[0][0] = 1;
+	C[0][1] = 0;
+	C[0][2] = 0;
+	C[0][3] = 0;
+	C[1][0] = 0;
+	C[1][1] = 1;
+	C[1][2] = 0;
+	C[1][3] = 0;
+	C[2][0] = 0;
+	C[2][1] = 0;
+	C[2][2] = 1;
+	C[2][3] = 0;
+	C[3][0] = 0;
+	C[3][1] = 0;
+	C[3][2] = 0;
+	C[3][3] = 1;
+
+	/* initial entries of the error covariance matrix of 'x - x_estim' (P) */
+	P[0][0] = 1;
+	P[0][1] = 0;
+	P[0][2] = 0;
+	P[0][3] = 0;
+	P[1][0] = 0;
+	P[1][1] = 1;
+	P[1][2] = 0;
+	P[1][3] = 0;
+	P[2][0] = 0;
+	P[2][1] = 0;
+	P[2][2] = 1;
+	P[2][3] = 0;
+	P[3][0] = 0;
+	P[3][1] = 0;
+	P[3][2] = 0;
+	P[3][3] = 1;
+
+	/* entries of the disturbance covariance matrix (Vd) */
+	Vd[0][0] = 0.1;
+	Vd[0][1] = 0;
+	Vd[0][2] = 0;
+	Vd[0][3] = 0;
+	Vd[1][0] = 0;
+	Vd[1][1] = 0.1;
+	Vd[1][2] = 0;
+	Vd[1][3] = 0;
+	Vd[2][0] = 0;
+	Vd[2][1] = 0;
+	Vd[2][2] = 0.1;
+	Vd[2][3] = 0;
+	Vd[3][0] = 0;
+	Vd[3][1] = 0;
+	Vd[3][2] = 0;
+	Vd[3][3] = 0.1;
+
+	/* entries of the noise covariance matrix (Vn) */
+  Vn[0][0] = 1;
+	Vn[0][1] = 0;
+	Vn[0][2] = 0;
+	Vn[0][3] = 0;
+	Vn[1][0] = 0;
+	Vn[1][1] = 1;
+	Vn[1][2] = 0;
+	Vn[1][3] = 0;
+	Vn[2][0] = 0;
+	Vn[2][1] = 0;
+	Vn[2][2] = 1;
+	Vn[2][3] = 0;
+	Vn[3][0] = 0;
+	Vn[3][1] = 0;
+	Vn[3][2] = 0;
+	Vn[3][3] = 1;
+
+	/* 4x4 float identity matrix */
+	IdentityMatrix[0][0] = 1;
+	IdentityMatrix[0][1] = 0;
+	IdentityMatrix[0][2] = 0;
+	IdentityMatrix[0][3] = 0;
+	IdentityMatrix[1][0] = 0;
+	IdentityMatrix[1][1] = 1;
+	IdentityMatrix[1][2] = 0;
+	IdentityMatrix[1][3] = 0;
+	IdentityMatrix[2][0] = 0;
+	IdentityMatrix[2][1] = 0;
+	IdentityMatrix[2][2] = 1;
+	IdentityMatrix[2][3] = 0;
+	IdentityMatrix[3][0] = 0;
+	IdentityMatrix[3][1] = 0;
+	IdentityMatrix[3][2] = 0;
+	IdentityMatrix[3][3] = 1;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1342,10 +1329,10 @@ void CMControlOut(int16_t spa , int16_t spb ,int16_t spc ,int16_t spd )
 		* The input sent to the motor's speed controller is in the range [-16384, +16384], which corresponds to
 		* a current range of [-20A, +20A]. The motor then produces a torque that is proportional to the
 		* received current and based on its Torque Constant Km = 0.741 N*m/A */
-	speedA_value = speedA;	
-	speedB_value = speedB;	
-	input_to_wheel_L = (speedA*20/16384)*0.741;		//measurement unit: torque [N*m]
-	input_to_wheel_R = (speedB*20/16384)*0.741;		//measurement unit: torque [N*m]
+		speedA_value = speedA;	
+		speedB_value = speedB;	
+		input_to_wheel_L = (speedA*20/16384)*0.741;		//measurement unit: torque [N*m]
+		input_to_wheel_R = (speedB*20/16384)*0.741;		//measurement unit: torque [N*m]
 	
    // if(cap_receive.state_module==Cap_Run&&cap_receive.state_cap==Cap_Boost&&cap_receive.CapVol>11800)
     if(1)

@@ -372,6 +372,11 @@ void continue_value(void)
 	}
 	previous_position_206=current_position_206;
 	
+	
+	/**********************************************
+	Computation of the linear position and velocity on the ground of the left wheel
+	**********************************************/
+	
 	if(!flag_Ready)
 	{continuous_current_position_201=current_position_201*0.000002995556;}
 	else
@@ -394,6 +399,7 @@ void continue_value(void)
 	previous_position_201 = current_position_201;
 	//continuous_previous_position_201=continuous_current_position_201;
 	if (time_tick_1ms%10 == 0) {
+		
 		estimated_speed_201 = (continuous_current_position_201 - continuous_previous_position_201)*100;		//estimated_speed_201 = (...)/0.01;
 		continuous_previous_position_201 = continuous_current_position_201;
 	}
@@ -419,6 +425,7 @@ void continue_value(void)
 	}
 	previous_position_202 = current_position_202;
 	if (time_tick_1ms%10 == 0) {
+		
 		estimated_speed_202 = (continuous_current_position_202 - continuous_previous_position_202)*100;		//estimated_speed_202 = (...)/0.01;
 		continuous_previous_position_202 = continuous_current_position_202;
 	}
