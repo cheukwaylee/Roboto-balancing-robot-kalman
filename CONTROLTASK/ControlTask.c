@@ -59,17 +59,21 @@ void Control_Task()
     {
         small_power_delay++;//接收到大小符需要的云台位置信息到云台运动到指定位置的时间
     }*/
-#ifdef Gimbal_Move
-    GimbalControlLoop();
-    if(time_tick_1ms%1000 == 0)
+	
+	if(time_tick_1ms%1 == 0)
     {
-        final_count=auto_aim_count_;
-        com_count=upack_count;
-        auto_aim_count_=0;
-        upack_count=0;
+			#ifdef Gimbal_Move
+					GimbalControlLoop();
+			//    if(time_tick_1ms%1000 == 0)
+			//    {
+			//        final_count=auto_aim_count_;
+			//        com_count=upack_count;
+			//        auto_aim_count_=0;
+			//        upack_count=0;
 
+			//    }
+			#endif
     }
-#endif
 
 #ifdef AutoAim_USB
     USB_TaskLoop(time_tick_1ms);
@@ -92,9 +96,9 @@ void Control_Task()
 
         //sendtoComputer(0,0,0);
 
-#ifdef _chassis_move
-        CMControlLoop();
-#endif
+				#ifdef Chassis_Move
+								CMControlLoop();
+				#endif
 
     }
 

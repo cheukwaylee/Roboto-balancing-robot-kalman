@@ -95,7 +95,7 @@ void clear_zero_float(void)
 	{
 		if((RC_Ex_Ctl.key.v & KEY_PRESSED_OFFSET_G )==KEY_PRESSED_OFFSET_G&&clear_delay<=0&&adi_die_flag==1)
 		{
-			yaw_position_0=continuous_current_position_205;
+			yaw_position_0=contiguous_current_position_205;
 			clear_delay=1000;
 			dynamic_zero_float_offset=0;
 			clearing_flag=1;
@@ -112,7 +112,7 @@ void clear_zero_float(void)
 		
 		if(clear_delay==0&&clearing_flag==1)
 		{
-			dynamic_zero_float_offset=-(continuous_current_position_205-yaw_position_0)/1000.0f/8192.0f*2*PI;
+			dynamic_zero_float_offset=-(contiguous_current_position_205-yaw_position_0)/1000.0f/8192.0f*2*PI;
 			clearing_flag=0;
 		}
 	}

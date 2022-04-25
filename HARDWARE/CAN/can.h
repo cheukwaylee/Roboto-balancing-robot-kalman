@@ -66,13 +66,13 @@ volatile extern int16_t current_cm_203;
 volatile extern int16_t current_cm_204;
 volatile extern int16_t current_cm_205;
 volatile extern int16_t current_cm_206;
-volatile extern int16_t continuous_current_position_205;			//yaw gimbal
-volatile extern int16_t continuous_current_position_206;    	//pitch gimbal
-volatile extern float continuous_current_position_207;
-volatile extern float continuous_current_position_201;
-volatile extern float continuous_previous_position_201;
-volatile extern float continuous_current_position_202;
-volatile extern float continuous_previous_position_202;
+volatile extern int16_t contiguous_current_position_205;			//yaw gimbal
+volatile extern int16_t contiguous_current_position_206;    	//pitch gimbal
+volatile extern float contiguous_current_position_207;
+volatile extern float contiguous_current_position_201;
+volatile extern float contiguous_previous_position_201;
+volatile extern float contiguous_current_position_202;
+volatile extern float contiguous_previous_position_202;
 extern int16_t rotate_201_count;
 extern int16_t rotate_202_count;
 volatile extern float estimated_speed_201;
@@ -83,8 +83,8 @@ volatile extern int16_t t_i_1;
 volatile extern int16_t t_i_2;
 volatile extern int16_t t_i_3;
 volatile extern int16_t t_i_4;
-volatile extern int16_t continuous_current_position_filtered_205;			//yaw gimbal
-volatile extern int16_t continuous_current_position_filtered_206;    	//pitch gimbal
+volatile extern int16_t contiguous_current_position_filtered_205;			//yaw gimbal
+volatile extern int16_t contiguous_current_position_filtered_206;    	//pitch gimbal
 extern int16_t pitch_history[20];
 extern int16_t yaw_speed;
 extern int16_t aid_dynamic_mach_angle;

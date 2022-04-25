@@ -152,6 +152,12 @@ int switch_mode_delay=0;
 int switch_mode_delay_init=500;
 float Compensation_spin=0;
 
+
+
+int need_to_initialize_gimbal = 1;
+
+
+
 void GimbalControlInit(void)
 {
 		PID_ControllerInit(&YawPID.Position,120,20000,60000,0.001);//YT,120
@@ -209,177 +215,243 @@ void GimbalControlInit(void)
 
 
 
+
 void GimbalControlLoop(void)
 {
 
-    position_yaw_relative = GimbalValLigal(current_position_205	,	MIDDLE_YAW);
-    position_pit_relative = GimbalValLigal(current_position_206	,	MIDDLE_PITCH);
-    target_offset(target_offset_flag);
-    if(remoteState==PREPARE_STATE)
+    CM_Switch_Moni();
+    if(remoteState == PREPARE_STATE)
     {
-        target_offset_flag=1;
-        switch_mode_delay=-1;
-        if(remoteState_pre!=PREPARE_STATE)
-        {
-            TurnToPreparePID();
-        }
-        if(TIM6_time_count>2000)
-        {
-            PIDOut_Whole_Yaw=YawPID_MechanicalAngle_Relative(0);
-            PIDOut_Whole_Pit=PitchPID_MechanicalAngle_Relative(0);
-        }
+			if (need_to_initialize_gimbal) {
+				balancing_robot_gimbal_model_initialization(&BR_gimbal);
+				//system_matrices_initialization();
+				LQR_gain_initialization(BR_GIMBAL);
+				need_to_initialize_gimbal = 0;
+			}
+       GimbalStop();
     }
-    else if(remoteState==ERROR_STATE)
+    else if(remoteState == NORMAL_REMOTE_STATE)
     {
-        switch_mode_delay=-1;
-        target_offset_flag=1;
+      //CMFollowVal = followValCal(0);
+      //move(RC_Ex_Ctl.rc.ch0/10.24,RC_Ex_Ctl.rc.ch1/5.12,CMFollowVal/*0.5f*(RC_Ex_Ctl.rc.ch2)*/);
+			//CMbalanceVal = caculate_balance(0.15*57.3);
+			//move_balance(RC_Ex_Ctl.rc.ch1/5.12,0.5f*(RC_Ex_Ctl.rc.ch2),CMbalanceVal);
+			
+			
+//			// update the estimation of the balancing robot's state (considering the robot's angulare position/velocity and the linear position/velocity on the ground of both left and right wheel)
+//			kalman_filter_nonlinear_update(input_to_wheel_L, contiguous_current_position_201, estimated_speed_201, Pitch - Pitch_balance_offset, Pitch_gyro, &Pos_estim_L, &Pos_dot_estim_L, &Pitch_estim_L, &Pitch_gyro_estim_L);
+//			kalman_filter_nonlinear_update(input_to_wheel_R, contiguous_current_position_202, estimated_speed_202, Pitch - Pitch_balance_offset, Pitch_gyro, &Pos_estim_R, &Pos_dot_estim_R, &Pitch_estim_R, &Pitch_gyro_estim_R);
+//			
+//			// take the average of the angular position/velocity estimated by considering separately left and right wheel
+//			Pitch_estim = (Pitch_estim_L + Pitch_estim_R) / 2;
+//			Pitch_gyro_estim = (Pitch_gyro_estim_L + Pitch_gyro_estim_R) / 2;
+//			Pos_estim = (Pos_estim_L + Pos_estim_R) / 2;
+//			Pos_dot_estim = (Pos_dot_estim_L + Pos_dot_estim_R) / 2;
+//			
+//			// commands sent by means of the joystick
+//			forward_backward_command = RC_Ex_Ctl.rc.ch1;
+//			right_left_command = RC_Ex_Ctl.rc.ch0;
+//			
+//			// control the robot
+//			move_balance(forward_backward_command, right_left_command);		//POSSO CAMBIARE NOME ALLA FUNZIONE "move_balance()"?
+			
+    }
+    else if(remoteState == STANDBY_STATE )
+    {
         GimbalStop();
     }
-    else if(remoteState==STANDBY_STATE)
+    else if(remoteState == ERROR_STATE )
     {
-        switch_mode_delay=-1;
-        target_offset_flag=1;
         GimbalStop();
     }
-    else if(remoteState==NORMAL_REMOTE_STATE)
+    else if(remoteState == KEY_REMOTE_STATE )
     {
-//			PIDOut_Whole_Yaw=YawPID_MechanicalAngle_Relative(0);
-//			PIDOut_Whole_Pit=PitchPID_MechanicalAngle_Relative(0);
-        if((remoteState_pre!=NORMAL_REMOTE_STATE)&&(remoteState_pre!=KEY_REMOTE_STATE))
-        {
-            TurnToPreparePID();
-            switch_mode_delay=switch_mode_delay_init;
-        }
-
-        if(switch_mode_delay>0)
-        {
-            switch_mode_delay--;
-            target_offset_flag=1;
-            PIDOut_Whole_Yaw=YawPID_MechanicalAngle_Relative(0);
-            PIDOut_Whole_Pit=PitchPID_MechanicalAngle_Relative(0);
-        }
-        else if(switch_mode_delay==0)
-        {
-            TurnToNormalPID();
-            switch_mode_delay=-1;
-        }//???????????
-        else
-        {
-            target_offset_flag=0;
-            TargetCacul();
-            PIDOut_Whole_Pit=PitchPID_MechanicalAngle(PitchTarget.Mechanical);
-
-
-//				if(abs(YawTarget.Gyroscope-Yaw*57.3f)<1)
-//				{
-//					TurnToSmallANGPID();
-//				}
-//				else
-//				{
-            TurnToNormalPID();
-//				}
-            PIDOut_Whole_Yaw=YawPID_Gyro(YawTarget.Gyroscope);
-        }//???????????
-    }
-    else if(remoteState==KEY_REMOTE_STATE)
-    {
-
-        if((remoteState_pre!=KEY_REMOTE_STATE)&&(remoteState_pre!=NORMAL_REMOTE_STATE)&&(remoteState_pre!=VIEW_STATE))
-        {
-            TurnToPreparePID();
-            switch_mode_delay=switch_mode_delay_init;
-        }
-
-        if(switch_mode_delay>0)
-        {
-            switch_mode_delay--;
-            target_offset_flag=1;
-            PIDOut_Whole_Yaw=YawPID_MechanicalAngle_Relative(0);
-            PIDOut_Whole_Pit=PitchPID_MechanicalAngle_Relative(0);
-        }
-        else if(switch_mode_delay==0)
-        {
-            TurnToNormalPID();
-            switch_mode_delay=-1;
-        }//???????????
-        else
-        {
-            if(quick_spin_flag==0)
-            {
-                target_offset_flag=0;
-                TargetCacul();
-                PIDOut_Whole_Pit=PitchPID_MechanicalAngle(PitchTarget.Mechanical);
-
-//					if(abs(YawTarget.Gyroscope-Yaw*57.3f)<1)
-//					{
-//						TurnToSmallANGPID();
-//					}
-//					else
-//					{
-                TurnToNormalPID();
-//					}
-                PIDOut_Whole_Yaw=YawPID_Gyro(YawTarget.Gyroscope);
-            }
-            else
-            {
-                TurnToYawMechPID();
-                target_offset_flag=1;
-                PIDOut_Whole_Yaw=YawPID_MechanicalAngle_Relative(0);
-                PIDOut_Whole_Pit=PitchPID_MechanicalAngle_Relative(0);
-            }
-        }
-
+				GimbalStop();
     }
     else if(remoteState == VIEW_STATE )
     {
-			if(remoteState_pre!=VIEW_STATE)
-			{
-				yaw_bias=0;
-				pitch_bias=0;
-			}
-        if(auto_aim_flag == 0xFF && big_power_flag == 0x00)//&&(RC_Ex_Ctl.key.v & KEY_PRESSED_OFFSET_C ) == KEY_PRESSED_OFFSET_C )
-        //if(1)
-        {
-#ifdef AutoAim_USB
-            Auto_aim(USB_ReadBuffer,64);
-#else
-            Auto_aim(fram,15);
-#endif
-						
-						target_offset_flag=2;
-            //PIDOut_Whole_Pit=PitchPID_MechanicalAngle(PitchTarget.Mechanical);
-						PIDOut_Whole_Pit=PitchPID_AutoAimAngle(PitchTarget.Mechanical);
-            TurnToNormalPID();
-            PIDOut_Whole_Yaw=YawPID_Gyro(YawTarget.Gyroscope);
-        }
-				else if(big_power_flag == 0xFF && auto_aim_flag == 0x00)
-				{
-					#ifdef AutoAim_USB
-            Auto_aim(USB_ReadBuffer,64);
-#else
-            Auto_aim(fram,15);
-#endif				
-            target_offset_flag=2;
-						TurnToBigBuffPID();
-						
-#ifdef INFANTRY_2
-            PIDOut_Whole_Pit=PitchPID_BigBuff(PitchTarget.Mechanical);
-            PIDOut_Whole_Yaw=YawPID_Gyro(YawTarget.Gyroscope);
-#endif
-						
-#if ((defined INFANTRY_1) || (defined INFANTRY_3))
-            PIDOut_Whole_Pit=PitchPID_BigBuff(PitchTarget.Mechanical);
-            PIDOut_Whole_Yaw=YawPID_BigBuff(YawTarget.Mechanical);
-#endif
-						
-						
-            //PIDOut_Whole_Yaw=YawPID_Gyro(YawTarget.Gyroscope);
-				}
+				GimbalStop();
     }
-
-    CAN1_Cmd_All((int16_t)PIDOut_Whole_Yaw, (int16_t)PIDOut_Whole_Pit);
-    //CAN1_Cmd_All((int16_t)0, (int16_t)0);
 }
+
+
+
+
+
+
+
+
+//void GimbalControlLoop(void)
+//{
+
+//    position_yaw_relative = GimbalValLigal(current_position_205	,	MIDDLE_YAW);
+//    position_pit_relative = GimbalValLigal(current_position_206	,	MIDDLE_PITCH);
+//    target_offset(target_offset_flag);
+//    if(remoteState==PREPARE_STATE)
+//    {
+//        target_offset_flag=1;
+//        switch_mode_delay=-1;
+//        if(remoteState_pre!=PREPARE_STATE)
+//        {
+//            TurnToPreparePID();
+//        }
+//        if(TIM6_time_count>2000)
+//        {
+//            PIDOut_Whole_Yaw=YawPID_MechanicalAngle_Relative(0);
+//            PIDOut_Whole_Pit=PitchPID_MechanicalAngle_Relative(0);
+//        }
+//    }
+//    else if(remoteState==ERROR_STATE)
+//    {
+//        switch_mode_delay=-1;
+//        target_offset_flag=1;
+//        GimbalStop();
+//    }
+//    else if(remoteState==STANDBY_STATE)
+//    {
+//        switch_mode_delay=-1;
+//        target_offset_flag=1;
+//        GimbalStop();
+//    }
+//    else if(remoteState==NORMAL_REMOTE_STATE)
+//    {
+////			PIDOut_Whole_Yaw=YawPID_MechanicalAngle_Relative(0);
+////			PIDOut_Whole_Pit=PitchPID_MechanicalAngle_Relative(0);
+//        if((remoteState_pre!=NORMAL_REMOTE_STATE)&&(remoteState_pre!=KEY_REMOTE_STATE))
+//        {
+//            TurnToPreparePID();
+//            switch_mode_delay=switch_mode_delay_init;
+//        }
+
+//        if(switch_mode_delay>0)
+//        {
+//            switch_mode_delay--;
+//            target_offset_flag=1;
+//            PIDOut_Whole_Yaw=YawPID_MechanicalAngle_Relative(0);
+//            PIDOut_Whole_Pit=PitchPID_MechanicalAngle_Relative(0);
+//        }
+//        else if(switch_mode_delay==0)
+//        {
+//            TurnToNormalPID();
+//            switch_mode_delay=-1;
+//        }//???????????
+//        else
+//        {
+//            target_offset_flag=0;
+//            TargetCacul();
+//            PIDOut_Whole_Pit=PitchPID_MechanicalAngle(PitchTarget.Mechanical);
+
+
+////				if(abs(YawTarget.Gyroscope-Yaw*57.3f)<1)
+////				{
+////					TurnToSmallANGPID();
+////				}
+////				else
+////				{
+//            TurnToNormalPID();
+////				}
+//            PIDOut_Whole_Yaw=YawPID_Gyro(YawTarget.Gyroscope);
+//        }//???????????
+//    }
+//    else if(remoteState==KEY_REMOTE_STATE)
+//    {
+
+//        if((remoteState_pre!=KEY_REMOTE_STATE)&&(remoteState_pre!=NORMAL_REMOTE_STATE)&&(remoteState_pre!=VIEW_STATE))
+//        {
+//            TurnToPreparePID();
+//            switch_mode_delay=switch_mode_delay_init;
+//        }
+
+//        if(switch_mode_delay>0)
+//        {
+//            switch_mode_delay--;
+//            target_offset_flag=1;
+//            PIDOut_Whole_Yaw=YawPID_MechanicalAngle_Relative(0);
+//            PIDOut_Whole_Pit=PitchPID_MechanicalAngle_Relative(0);
+//        }
+//        else if(switch_mode_delay==0)
+//        {
+//            TurnToNormalPID();
+//            switch_mode_delay=-1;
+//        }//???????????
+//        else
+//        {
+//            if(quick_spin_flag==0)
+//            {
+//                target_offset_flag=0;
+//                TargetCacul();
+//                PIDOut_Whole_Pit=PitchPID_MechanicalAngle(PitchTarget.Mechanical);
+
+////					if(abs(YawTarget.Gyroscope-Yaw*57.3f)<1)
+////					{
+////						TurnToSmallANGPID();
+////					}
+////					else
+////					{
+//                TurnToNormalPID();
+////					}
+//                PIDOut_Whole_Yaw=YawPID_Gyro(YawTarget.Gyroscope);
+//            }
+//            else
+//            {
+//                TurnToYawMechPID();
+//                target_offset_flag=1;
+//                PIDOut_Whole_Yaw=YawPID_MechanicalAngle_Relative(0);
+//                PIDOut_Whole_Pit=PitchPID_MechanicalAngle_Relative(0);
+//            }
+//        }
+
+//    }
+//    else if(remoteState == VIEW_STATE )
+//    {
+//			if(remoteState_pre!=VIEW_STATE)
+//			{
+//				yaw_bias=0;
+//				pitch_bias=0;
+//			}
+//        if(auto_aim_flag == 0xFF && big_power_flag == 0x00)//&&(RC_Ex_Ctl.key.v & KEY_PRESSED_OFFSET_C ) == KEY_PRESSED_OFFSET_C )
+//        //if(1)
+//        {
+//#ifdef AutoAim_USB
+//            Auto_aim(USB_ReadBuffer,64);
+//#else
+//            Auto_aim(fram,15);
+//#endif
+//						
+//						target_offset_flag=2;
+//            //PIDOut_Whole_Pit=PitchPID_MechanicalAngle(PitchTarget.Mechanical);
+//						PIDOut_Whole_Pit=PitchPID_AutoAimAngle(PitchTarget.Mechanical);
+//            TurnToNormalPID();
+//            PIDOut_Whole_Yaw=YawPID_Gyro(YawTarget.Gyroscope);
+//        }
+//				else if(big_power_flag == 0xFF && auto_aim_flag == 0x00)
+//				{
+//					#ifdef AutoAim_USB
+//            Auto_aim(USB_ReadBuffer,64);
+//#else
+//            Auto_aim(fram,15);
+//#endif				
+//            target_offset_flag=2;
+//						TurnToBigBuffPID();
+//						
+//#ifdef INFANTRY_2
+//            PIDOut_Whole_Pit=PitchPID_BigBuff(PitchTarget.Mechanical);
+//            PIDOut_Whole_Yaw=YawPID_Gyro(YawTarget.Gyroscope);
+//#endif
+//						
+//#if ((defined INFANTRY_1) || (defined INFANTRY_3))
+//            PIDOut_Whole_Pit=PitchPID_BigBuff(PitchTarget.Mechanical);
+//            PIDOut_Whole_Yaw=YawPID_BigBuff(YawTarget.Mechanical);
+//#endif
+//						
+//						
+//            //PIDOut_Whole_Yaw=YawPID_Gyro(YawTarget.Gyroscope);
+//				}
+//    }
+
+//    CAN1_Cmd_All((int16_t)PIDOut_Whole_Yaw, (int16_t)PIDOut_Whole_Pit);
+//    //CAN1_Cmd_All((int16_t)0, (int16_t)0);
+//}
 
 float yaw_com=0;
 float pit_com=0;
@@ -528,7 +600,7 @@ float PitchPID_MechanicalAngle_Relative(float SetRelative)
 float YawPID_MechanicalAngle(float SetPosition)
 {
 
-    float NowPosition=continuous_current_position_205;
+    float NowPosition=contiguous_current_position_205;
     float NowSpeed=0;
     if (adi_die_flag==0)
         NowSpeed=adis16470_real_data.gyro_z*57.3f;
@@ -546,7 +618,7 @@ float YawPID_MechanicalAngle(float SetPosition)
 
 float PitchPID_MechanicalAngle(float SetPosition)
 {
-    float NowPosition=continuous_current_position_filtered_206;
+    float NowPosition=contiguous_current_position_filtered_206;
     float NowSpeed=0;//current_cm_206;
     if (adi_die_flag==0)
         NowSpeed=-adis16470_real_data.gyro_y*57.3f;
@@ -563,7 +635,7 @@ float PitchPID_MechanicalAngle(float SetPosition)
 #ifdef INFANTRY_2
 float PitchPID_AutoAimAngle(float SetPosition)
 {		
-		float NowPosition=continuous_current_position_filtered_206;
+		float NowPosition=contiguous_current_position_filtered_206;
     float NowSpeed=0;//current_cm_206;
     if (adi_die_flag==0)
         NowSpeed=-adis16470_real_data.gyro_y*57.3f;
@@ -579,7 +651,7 @@ float PitchPID_AutoAimAngle(float SetPosition)
 
 float YawPID_BigBuff(float SetPosition)
 {
-    float NowPosition=continuous_current_position_filtered_205;//Gimbal_control.angle_yaw_current
+    float NowPosition=contiguous_current_position_filtered_205;//Gimbal_control.angle_yaw_current
     float NowSpeed=0;
     if (adi_die_flag==0)
         NowSpeed=adis16470_real_data.gyro_z*57.3f;
@@ -594,7 +666,7 @@ float YawPID_BigBuff(float SetPosition)
 
 float PitchPID_BigBuff(float SetPosition)
 {
-    float NowPosition=continuous_current_position_filtered_206;
+    float NowPosition=contiguous_current_position_filtered_206;
     float NowSpeed=0;//current_cm_206;
     if (adi_die_flag==0)
         NowSpeed=-adis16470_real_data.gyro_y*57.3f;
@@ -626,7 +698,7 @@ float PitchPID_BigBuff(float SetPosition)
 #if ((defined INFANTRY_1) || (defined INFANTRY_3))
 float PitchPID_AutoAimAngle(float SetPosition)
 {		
-		float NowPosition=continuous_current_position_filtered_206;
+		float NowPosition=contiguous_current_position_filtered_206;
     float NowSpeed=0;//current_cm_206;
     if (adi_die_flag==0)
         NowSpeed=-adis16470_real_data.gyro_y*57.3f;
@@ -642,7 +714,7 @@ float PitchPID_AutoAimAngle(float SetPosition)
 
 float YawPID_BigBuff(float SetPosition)
 {
-    float NowPosition=continuous_current_position_filtered_205;//Gimbal_control.angle_yaw_current
+    float NowPosition=contiguous_current_position_filtered_205;//Gimbal_control.angle_yaw_current
     float NowSpeed=0;
     if (adi_die_flag==0)
         NowSpeed=adis16470_real_data.gyro_z*57.3f;
@@ -660,7 +732,7 @@ float YawPID_BigBuff(float SetPosition)
 
 float PitchPID_BigBuff(float SetPosition)
 {
-    float NowPosition=continuous_current_position_filtered_206;
+    float NowPosition=contiguous_current_position_filtered_206;
     float NowSpeed=0;//current_cm_206;
     if (adi_die_flag==0)
         NowSpeed=-adis16470_real_data.gyro_y*57.3f;
@@ -767,8 +839,7 @@ float MotorCurrentLegalize(float MotorCurrent , float limit)
 
 void GimbalStop(void)
 {
-    PIDOut_Whole_Yaw=0;
-    PIDOut_Whole_Pit=0;
+    CAN1_Cmd_All((int16_t) 0, (int16_t) 0);
 }
 
 int16_t GimbalValLigal(int raw_gimbal_data,int middle_data)
@@ -788,14 +859,14 @@ void target_offset(u8 flag)
     {
     case 1:
     {
-        YawTarget.Mechanical=continuous_current_position_205;
+        YawTarget.Mechanical=contiguous_current_position_205;
         YawTarget.Gyroscope=Yaw*57.3f;
-        PitchTarget.Mechanical=continuous_current_position_206;
+        PitchTarget.Mechanical=contiguous_current_position_206;
     }
     break;//用于无云台控制状态或归中初始化，将各种模式目标值归为实时当前值
     case 2:
     {
-        YawTarget.Mechanical=continuous_current_position_205;
+        YawTarget.Mechanical=contiguous_current_position_205;
     }
     break;//用于用陀螺仪控制yaw轴时，机械角目标更新
     case 3:
@@ -805,7 +876,7 @@ void target_offset(u8 flag)
     break;//用于机械角控制yaw轴时候，陀螺仪目标角更新
     case 4:
     {
-        PitchTarget.Mechanical=continuous_current_position_206;
+        PitchTarget.Mechanical=contiguous_current_position_206;
     }
     break;//用于陀螺仪控制pitch时候，机械目标角更新
 

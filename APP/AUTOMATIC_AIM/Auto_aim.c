@@ -241,7 +241,7 @@ void Auto_aim(frame fram,int len)
 							temp_yaw_target_p=0.01f;
 						PID_SetGains(&auto_yaw,temp_yaw_target_p,0,0);
             auto_aim_yaw=Yaw*57.3f-fram.yaw;
-            auto_aim_pit=continuous_current_position_206-fram.pitch*22.75f;
+            auto_aim_pit=contiguous_current_position_206-fram.pitch*22.75f;
 						
 						auto_aim_yaw+=yaw_bias;
 						auto_aim_pit+=pitch_bias;
@@ -317,7 +317,7 @@ void Auto_aim(frame fram,int len)
 						PID_SetGains(&autobigbuff_pit,0.05,0,0.001);
 						
             auto_aim_yaw=Yaw*57.3f-fram.yaw;
-            auto_aim_pit=continuous_current_position_206-fram.pitch*22.75f;
+            auto_aim_pit=contiguous_current_position_206-fram.pitch*22.75f;
 
             if(auto_aim_pit > MIDDLE_PITCH+PitMax)
             {
@@ -353,8 +353,8 @@ void Auto_aim(frame fram,int len)
 							//temp_yaw_target_p=0.2f;//0.01
 						PID_SetGains(&autobigbuff_yaw,temp_yaw_target_p,0,0.00005);*/
 						
-						auto_aim_yaw=continuous_current_position_205-fram.yaw*22.75f;
-            auto_aim_pit=continuous_current_position_206-fram.pitch*22.75f;
+						auto_aim_yaw=contiguous_current_position_205-fram.yaw*22.75f;
+            auto_aim_pit=contiguous_current_position_206-fram.pitch*22.75f;
 
             if(auto_aim_pit > MIDDLE_PITCH+PitMax)
             {
@@ -378,8 +378,8 @@ void Auto_aim(frame fram,int len)
 #endif
 
 #ifdef INFANTRY_3
-						auto_aim_yaw=continuous_current_position_205-fram.yaw*22.75f;
-            auto_aim_pit=continuous_current_position_206-fram.pitch*22.75f;
+						auto_aim_yaw=contiguous_current_position_205-fram.yaw*22.75f;
+            auto_aim_pit=contiguous_current_position_206-fram.pitch*22.75f;
 
             if(auto_aim_pit > MIDDLE_PITCH+PitMax)
             {

@@ -1,5 +1,5 @@
 #ifndef __MAIN_H_
-#define __MIAN_H_
+#define __MAIN_H_
 
 
 #include "sp_type.h"
@@ -28,6 +28,8 @@
 #include "mpu6500.h"
 
 //#include "pid.h"
+#include "ControlAndEstimationAlgorithms.h"
+#include "MathUtilities.h"
 
 #include "MonitorControl.h"
 #include "RemoteControl.h"
@@ -38,6 +40,18 @@
 #include "GimbalControl.h"
 #include "Auto_aim.h"
 #include "SendCom.h"
+
+
+
+#define BR_CHASSIS 1
+#define BR_GIMBAL 2
+
+#define LEFT_WHEEL 1
+#define RIGHT_WHEEL 2
+
+#define gain_Pos_dot_from_Pitch 6
+#define gain_no_joystick_commands 1.5
+
 
 
 //#define Referee_System //接入裁判系统时开启
@@ -54,8 +68,8 @@
 
 
 
-#define _chassis_move
-//#define Gimbal_Move
+#define Chassis_Move
+#define Gimbal_Move
 
 //#define AutoAim_USB
 //#define USING_USB

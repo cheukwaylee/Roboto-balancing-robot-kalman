@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F427X,USE_STDPERIPH_DRIVER,ARM_MATH_CM4, __FPU_PRESENT=1, __FPU_USED =1, __CC_ARM</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\Lib\inc;..\Lib\src;..\USER;..\Lib\SP_Lib;..\Lib\CMSIS\Include;..\HARDWARE\BSP;..\HARDWARE\BUZZER;..\HARDWARE\CAN;..\HARDWARE\DELAY;..\HARDWARE\LED;..\HARDWARE\RC;..\HARDWARE\SYS;..\HARDWARE\TIMER;..\HARDWARE\SPI;..\CONTROLTASK;..\APP\MONITOR;..\APP\REMOTECONTROL;..\APP\SP_KALMAN;..\HARDWARE\ADI_GYRO;..\APP\GIMBALCONTROL;..\APP\SP_MADGWICK;..\APP\sp_kalman_2;..\HARDWARE\JY901_USART;..\HARDWARE\UART3;..\APP\CMCONTROL;..\APP\PID;..\USER;..\APP\EULER;..\APP\SHOOTCONTROL;..\APP\REFEREEINFO;..\HARDWARE\UART6;..\HARDWARE\LASER;..\HARDWARE\UART2;..\HARDWARE\View2MCU_ComProtocal;..\APP\AUTOMATIC_AIM;..\HARDWARE\MPU6500;..\HARDWARE\View2MCU_ComProtocal;..\APP\CAPCONTROL;..\HARDWARE\USB;..\Lib\STM32_USB_OTG_Driver\inc;..\Lib\STM32_USB_Device_Library\Core\inc;..\Lib\STM32_USB_Device_Library\Class\cdc\inc;..\Lib\STM32_USB_HOST_Library\Core\inc;..\HARDWARE\USB\usr;..\HARDWARE\USB\hid;..\APP\SEND_COMP</IncludePath>
+              <IncludePath>..\CORE;..\Lib\inc;..\Lib\src;..\USER;..\Lib\SP_Lib;..\Lib\CMSIS\Include;..\HARDWARE\BSP;..\HARDWARE\BUZZER;..\HARDWARE\CAN;..\HARDWARE\DELAY;..\HARDWARE\LED;..\HARDWARE\RC;..\HARDWARE\SYS;..\HARDWARE\TIMER;..\HARDWARE\SPI;..\CONTROLTASK;..\APP\MONITOR;..\APP\REMOTECONTROL;..\APP\SP_KALMAN;..\HARDWARE\ADI_GYRO;..\APP\GIMBALCONTROL;..\APP\SP_MADGWICK;..\APP\sp_kalman_2;..\HARDWARE\JY901_USART;..\HARDWARE\UART3;..\APP\CMCONTROL;..\APP\PID;..\USER;..\APP\EULER;..\APP\SHOOTCONTROL;..\APP\REFEREEINFO;..\HARDWARE\UART6;..\HARDWARE\LASER;..\HARDWARE\UART2;..\HARDWARE\View2MCU_ComProtocal;..\APP\AUTOMATIC_AIM;..\HARDWARE\MPU6500;..\HARDWARE\View2MCU_ComProtocal;..\APP\CAPCONTROL;..\HARDWARE\USB;..\Lib\STM32_USB_OTG_Driver\inc;..\Lib\STM32_USB_Device_Library\Core\inc;..\Lib\STM32_USB_Device_Library\Class\cdc\inc;..\Lib\STM32_USB_HOST_Library\Core\inc;..\HARDWARE\USB\usr;..\HARDWARE\USB\hid;..\APP\SEND_COMP;..\APP\ControlAndEstimationAlgorithms;..\APP\MathUtilities</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -608,6 +608,26 @@
               <FileName>SendCom.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\SEND_COMP\SendCom.c</FilePath>
+            </File>
+            <File>
+              <FileName>ControlAndEstimationAlgorithms.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\ControlAndEstimationAlgorithms\ControlAndEstimationAlgorithms.c</FilePath>
+            </File>
+            <File>
+              <FileName>ControlAndEstimationAlgorithms.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\APP\ControlAndEstimationAlgorithms\ControlAndEstimationAlgorithms.h</FilePath>
+            </File>
+            <File>
+              <FileName>MathUtilities.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\MathUtilities\MathUtilities.c</FilePath>
+            </File>
+            <File>
+              <FileName>MathUtilities.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\APP\MathUtilities\MathUtilities.h</FilePath>
             </File>
           </Files>
         </Group>

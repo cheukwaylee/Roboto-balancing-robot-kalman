@@ -47,18 +47,18 @@ volatile int16_t current_position_201;
 volatile int16_t current_position_202;
 
 
-volatile int16_t continuous_current_position_205;			//yaw gimbal
-volatile int16_t continuous_current_position_206;    	//pitch gimbal
-volatile int16_t continuous_current_position_filtered_205;			//yaw gimbal
-volatile int16_t continuous_current_position_filtered_206;    	//pitch gimbal
-volatile float continuous_current_position_207;
+volatile int16_t contiguous_current_position_205;			//yaw gimbal
+volatile int16_t contiguous_current_position_206;    	//pitch gimbal
+volatile int16_t contiguous_current_position_filtered_205;			//yaw gimbal
+volatile int16_t contiguous_current_position_filtered_206;    	//pitch gimbal
+volatile float contiguous_current_position_207;
 volatile int16_t previous_position_205;			//yaw gimbal
 volatile int16_t previous_position_206;    	//pitch gimbal
 volatile int16_t previous_position_207; 
-volatile float continuous_current_position_201;
-volatile float continuous_previous_position_201;
-volatile float continuous_current_position_202;
-volatile float continuous_previous_position_202;
+volatile float contiguous_current_position_201;
+volatile float contiguous_previous_position_201;
+volatile float contiguous_current_position_202;
+volatile float contiguous_previous_position_202;
 volatile float estimated_speed_201;
 volatile float estimated_speed_202;
 volatile int16_t previous_position_201;
@@ -316,12 +316,12 @@ void CAN2_RX0_IRQHandler(void)
 						if((rx_message2.Data[1])==1)
 						{
 							clearing_flag=1;
-							yaw_position_0=continuous_current_position_205;
+							yaw_position_0=contiguous_current_position_205;
 						}
 						else if((rx_message2.Data[1])==2)
 						{
 							clearing_flag=0;
-							aid_dynamic_mach_angle=continuous_current_position_205-yaw_position_0;
+							aid_dynamic_mach_angle=contiguous_current_position_205-yaw_position_0;
 							CAN2_Send_Clear(aid_dynamic_mach_angle);
 							aid_dynamic_mach_angle=0;
 						}
@@ -336,7 +336,7 @@ void continue_value(void)
 	/**********************************************/
 	if(!flag_Ready)
 	{
-		continuous_current_position_205=current_position_205;
+		contiguous_current_position_205=current_position_205;
 	}
 	else
 	{
@@ -349,13 +349,13 @@ void continue_value(void)
 			else
 				rotate_205_count+=1;
 		}
-		continuous_current_position_205=current_position_205+rotate_205_count*8192;
-		continuous_current_position_filtered_205=LPF_FirstOrder_filter(&filter_205,continuous_current_position_205);
+		contiguous_current_position_205=current_position_205+rotate_205_count*8192;
+		contiguous_current_position_filtered_205=LPF_FirstOrder_filter(&filter_205,contiguous_current_position_205);
 	}
 	previous_position_205=current_position_205;
 	/**********************************************/
 	if(!flag_Ready)
-	{continuous_current_position_206=current_position_206;}
+	{contiguous_current_position_206=current_position_206;}
 	else
 	{
 		if(abs(previous_position_206-current_position_206)>6000)
@@ -367,8 +367,8 @@ void continue_value(void)
 			else
 				rotate_206_count+=1;
 		}
-		continuous_current_position_206=current_position_206+rotate_206_count*8192;
-		continuous_current_position_filtered_206=LPF_FirstOrder_filter(&filter_206,continuous_current_position_206);
+		contiguous_current_position_206=current_position_206+rotate_206_count*8192;
+		contiguous_current_position_filtered_206=LPF_FirstOrder_filter(&filter_206,contiguous_current_position_206);
 	}
 	previous_position_206=current_position_206;
 	
@@ -378,7 +378,7 @@ void continue_value(void)
 	**********************************************/
 	
 	if(!flag_Ready)
-	{continuous_current_position_201=current_position_201*0.000002995556;}
+	{contiguous_current_position_201=current_position_201*0.000002995556;}
 	else
 	{
 		if(abs(previous_position_201-current_position_201)>6000)
@@ -390,24 +390,24 @@ void continue_value(void)
 			else
 				rotate_201_count+=1;
 		}
-		//estimated_speed_201 =(continuous_current_position_201-continuous_previous_position_201)/0.001;
+		//estimated_speed_201 =(contiguous_current_position_201-contiguous_previous_position_201)/0.001;
 		//before it was: estimated_speed_201 =(current_position_201-previous_position_201)*0.002995556;
 		
-		continuous_current_position_201 = current_position_201*0.000002995556 + rotate_201_count*(8192*0.000002995556);
-		//continuous_current_position_filtered_206=LPF_FirstOrder_filter(&filter_206,continuous_current_position_206);
+		contiguous_current_position_201 = current_position_201*0.000002995556 + rotate_201_count*(8192*0.000002995556);
+		//contiguous_current_position_filtered_206=LPF_FirstOrder_filter(&filter_206,contiguous_current_position_206);
 	}
 	previous_position_201 = current_position_201;
-	//continuous_previous_position_201=continuous_current_position_201;
+	//contiguous_previous_position_201=contiguous_current_position_201;
 	if (time_tick_1ms%10 == 0) {
 		
-		estimated_speed_201 = (continuous_current_position_201 - continuous_previous_position_201)*100;		//estimated_speed_201 = (...)/0.01;
-		continuous_previous_position_201 = continuous_current_position_201;
+		estimated_speed_201 = (contiguous_current_position_201 - contiguous_previous_position_201)*100;		//estimated_speed_201 = (...)/0.01;
+		contiguous_previous_position_201 = contiguous_current_position_201;
 	}
 	
 	/**********************************************/
 	
 	if(!flag_Ready)
-	{continuous_current_position_202=-current_position_202*0.000002995556;}
+	{contiguous_current_position_202=-current_position_202*0.000002995556;}
 	else
 	{
 		if(abs(previous_position_202-current_position_202)>6000)
@@ -420,14 +420,14 @@ void continue_value(void)
 				rotate_202_count+=1;
 		}
 		
-		continuous_current_position_202 = - (current_position_202*0.000002995556 + rotate_202_count*(8192*0.000002995556));
-		//continuous_current_position_filtered_206=LPF_FirstOrder_filter(&filter_206,continuous_current_position_206);
+		contiguous_current_position_202 = - (current_position_202*0.000002995556 + rotate_202_count*(8192*0.000002995556));
+		//contiguous_current_position_filtered_206=LPF_FirstOrder_filter(&filter_206,contiguous_current_position_206);
 	}
 	previous_position_202 = current_position_202;
 	if (time_tick_1ms%10 == 0) {
 		
-		estimated_speed_202 = (continuous_current_position_202 - continuous_previous_position_202)*100;		//estimated_speed_202 = (...)/0.01;
-		continuous_previous_position_202 = continuous_current_position_202;
+		estimated_speed_202 = (contiguous_current_position_202 - contiguous_previous_position_202)*100;		//estimated_speed_202 = (...)/0.01;
+		contiguous_previous_position_202 = contiguous_current_position_202;
 	}
 	
 	/**********************************************/
@@ -439,7 +439,7 @@ void continue_value(void)
 	{
 		float delta = current_position_207 - previous_position_207;
 		delta += (delta>6144)?-8192:((delta<-6144)?8192:0);
-		continuous_current_position_207 += (delta / 36.f)*0.0439453125f;// /360*10*360/8192
+		contiguous_current_position_207 += (delta / 36.f)*0.0439453125f;// /360*10*360/8192
 	}
 	previous_position_207=current_position_207;
 	

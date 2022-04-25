@@ -88,9 +88,9 @@ void RemoteStateFSM(void)
             {
                 if(firstINAIMING == 0)
                 {
-                    YawTarget.Mechanical=continuous_current_position_205;
+                    YawTarget.Mechanical=contiguous_current_position_205;
                     YawTarget.Gyroscope=Yaw*57.3f;
-                    PitchTarget.Mechanical=continuous_current_position_206;
+                    PitchTarget.Mechanical=contiguous_current_position_206;
                     GimbalStop();
                     PIDOut_Whole_Yaw = 0;
                     PIDOut_Whole_Pit = 0;
